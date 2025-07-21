@@ -1,0 +1,87 @@
+version: "3.8"
+
+services:
+  api_gateway:
+    build: ./api_gateway
+    ports:
+      - "6000:6000"
+    depends_on:
+      - rabbitmq
+
+  auth_service:
+    build: ./auth
+    ports:
+      - "6001:6001"
+    env_file:
+      - ./auth/.env
+    depends_on:
+      - rabbitmq
+
+  patient_service:
+    build: ./patient
+    ports:
+      - "6002:6002"
+    env_file:
+      - ./patient/.env
+    depends_on:
+      - rabbitmq
+
+  staff_service:
+    build: ./staff
+    ports:
+      - "6003:6003"
+    env_file:
+      - ./staff/.env
+    depends_on:
+      - rabbitmq
+
+  appointment_service:
+    build: ./appointment
+    ports:
+      - "6004:6004"
+    env_file:
+      - ./appointment/.env
+    depends_on:
+      - rabbitmq
+
+  lab_service:
+    build: ./lab
+    ports:
+      - "6005:6005"
+    env_file:
+      - ./lab/.env
+    depends_on:
+      - rabbitmq
+
+  pharmacy_service:
+    build: ./pharmacy
+    ports:
+      - "6006:6006"
+    env_file:
+      - ./pharmacy/.env
+    depends_on:
+      - rabbitmq
+
+  medical_record_service:
+    build: ./medical_record
+    ports:
+      - "6007:6007"
+    env_file:
+      - ./medical_record/.env
+    depends_on:
+      - rabbitmq
+
+  notification_service:
+    build: ./notification
+    ports:
+      - "6008:6008"
+    env_file:
+      - ./notification/.env
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
