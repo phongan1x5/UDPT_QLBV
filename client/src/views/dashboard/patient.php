@@ -1,12 +1,12 @@
 <?php
+require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
-?>
 
-<!-- <?php
-        echo '<pre>';
-        print_r($_SESSION['user']);
-        echo '</pre>';
-        ?> -->
+// Debug - you can remove this later
+echo '<pre>';
+print_r($user['token']);
+echo '</pre>';
+?>
 
 <div class="row">
     <div class="col-12">
@@ -36,53 +36,136 @@ ob_start();
     <div class="row">
         <!-- Left Column -->
         <div class="col-md-8">
-            <!-- Today's Appointments -->
+            <!-- Appointments Section (keep existing code) -->
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
-                        <i class="fas fa-calendar-day"></i> Today's Appointments
+                        <i class="fas fa-calendar-check"></i> My Appointments
                     </h5>
                     <a href="/appointments" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-eye"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Patient</th>
-                                    <th>Doctor</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>09:00 AM</td>
-                                    <td>John Doe (P001)</td>
-                                    <td>Dr. Smith</td>
-                                    <td>Check-up</td>
-                                    <td><span class="badge bg-warning">Scheduled</span></td>
-                                </tr>
-                                <tr>
-                                    <td>10:30 AM</td>
-                                    <td>Jane Wilson (P002)</td>
-                                    <td>Dr. Johnson</td>
-                                    <td>Follow-up</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                </tr>
-                                <tr>
-                                    <td>02:00 PM</td>
-                                    <td>Mike Brown (P003)</td>
-                                    <td>Dr. Davis</td>
-                                    <td>Consultation</td>
-                                    <td><span class="badge bg-primary">In Progress</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <?php
+                    // Extract appointments from the data structure
+                    $appointmentList = [];
+                    if ($appointments && $appointments['status'] === 200 && isset($appointments['data'][0]) && is_array($appointments['data'][0])) {
+                        $appointmentList = array_slice($appointments['data'][0], 0, 5); // Get top 5 appointments
+                    }
+                    ?>
+
+                    <?php if (!empty($appointmentList)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Doctor ID</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($appointmentList as $appointment): ?>
+                                        <tr>
+                                            <td>
+                                                <?php
+                                                $date = new DateTime($appointment['Ngay']);
+                                                echo $date->format('M j, Y');
+                                                ?>
+                                            </td>
+                                            <td>
+                                                <?php
+                                                $time = new DateTime($appointment['Gio']);
+                                                echo $time->format('g:i A');
+                                                ?>
+                                            </td>
+                                            <td>Dr. <?php echo htmlspecialchars($appointment['MaBacSi']); ?></td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    <?php
+                                                    $type = $appointment['LoaiLichHen'];
+                                                    echo $type === 'KhamMoi' ? 'New Checkup' : htmlspecialchars($type);
+                                                    ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <?php
+                                                $status = $appointment['TrangThai'];
+                                                $badgeClass = '';
+                                                $statusText = '';
+
+                                                switch ($status) {
+                                                    case 'ChoXacNhan':
+                                                        $badgeClass = 'bg-warning';
+                                                        $statusText = 'Pending';
+                                                        break;
+                                                    case 'XacNhan':
+                                                        $badgeClass = 'bg-success';
+                                                        $statusText = 'Confirmed';
+                                                        break;
+                                                    case 'HoanThanh':
+                                                        $badgeClass = 'bg-primary';
+                                                        $statusText = 'Completed';
+                                                        break;
+                                                    case 'Huy':
+                                                        $badgeClass = 'bg-danger';
+                                                        $statusText = 'Cancelled';
+                                                        break;
+                                                    default:
+                                                        $badgeClass = 'bg-secondary';
+                                                        $statusText = htmlspecialchars($status);
+                                                }
+                                                ?>
+                                                <span class="badge <?php echo $badgeClass; ?>"><?php echo $statusText; ?></span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="/appointments/view/<?php echo $appointment['MaLichHen']; ?>"
+                                                        class="btn btn-outline-primary btn-sm" title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <?php if ($appointment['TrangThai'] === 'ChoXacNhan'): ?>
+                                                        <a href="/appointments/edit/<?php echo $appointment['MaLichHen']; ?>"
+                                                            class="btn btn-outline-warning btn-sm" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="/appointments/cancel/<?php echo $appointment['MaLichHen']; ?>"
+                                                            class="btn btn-outline-danger btn-sm" title="Cancel"
+                                                            onclick="return confirm('Are you sure you want to cancel this appointment?')">
+                                                            <i class="fas fa-times"></i>
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <?php if (count($appointments['data'][0]) > 5): ?>
+                            <div class="text-center mt-3">
+                                <p class="text-muted">Showing 5 of <?php echo count($appointments['data'][0]); ?> appointments</p>
+                                <a href="/appointments" class="btn btn-primary">
+                                    <i class="fas fa-calendar-alt"></i> View All Appointments
+                                </a>
+                            </div>
+                        <?php endif; ?>
+
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Appointments Found</h5>
+                            <p class="text-muted">You don't have any appointments scheduled yet.</p>
+                            <a href="/appointments/book" class="btn btn-primary">
+                                <i class="fas fa-calendar-plus"></i> Book Your First Appointment
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -97,54 +180,133 @@ ob_start();
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Annual Physical Examination</h6>
-                                <small>2 hours ago</small>
+                    <?php
+                    // Extract medical records from the data structure
+                    $medicalRecords = [];
+                    $medicalProfile = null;
+
+                    if ($medicalHistory && $medicalHistory['status'] === 200 && isset($medicalHistory['data'][0])) {
+                        $medicalData = $medicalHistory['data'][0];
+
+                        // Get medical profile
+                        if (isset($medicalData['MedicalProfile'])) {
+                            $medicalProfile = $medicalData['MedicalProfile'];
+                        }
+
+                        // Get medical records (limit to 3 most recent)
+                        if (isset($medicalData['MedicalRecords']) && is_array($medicalData['MedicalRecords'])) {
+                            // Sort by date (most recent first) and take top 3
+                            $sortedRecords = $medicalData['MedicalRecords'];
+                            usort($sortedRecords, function ($a, $b) {
+                                return strtotime($b['NgayKham']) - strtotime($a['NgayKham']);
+                            });
+                            $medicalRecords = array_slice($sortedRecords, 0, 3);
+                        }
+                    }
+                    ?>
+
+                    <?php if (!empty($medicalRecords)): ?>
+                        <!-- Medical Profile Summary -->
+                        <?php if ($medicalProfile): ?>
+                            <div class="alert alert-info mb-4">
+                                <h6><i class="fas fa-user-md"></i> Medical History Summary</h6>
+                                <p class="mb-0"><?php echo htmlspecialchars($medicalProfile['TienSu']); ?></p>
                             </div>
-                            <p class="mb-1">Patient: Jane Wilson (P002) - Dr. Johnson</p>
-                            <small>Blood pressure normal, cholesterol levels elevated</small>
+                        <?php endif; ?>
+
+                        <!-- Recent Medical Records -->
+                        <div class="row">
+                            <?php foreach ($medicalRecords as $record): ?>
+                                <div class="col-md-12 mb-3">
+                                    <div class="card border-left-primary shadow-sm">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <h6 class="card-title text-primary">
+                                                        <i class="fas fa-stethoscope"></i>
+                                                        <?php echo htmlspecialchars($record['ChanDoan']); ?>
+                                                    </h6>
+                                                    <p class="card-text small text-muted mb-2">
+                                                        <i class="fas fa-calendar"></i>
+                                                        <?php
+                                                        $date = new DateTime($record['NgayKham']);
+                                                        echo $date->format('F j, Y');
+                                                        ?>
+                                                        &nbsp;&nbsp;
+                                                        <i class="fas fa-user-md"></i>
+                                                        Doctor ID: <?php echo htmlspecialchars($record['BacSi']); ?>
+                                                        <?php if ($record['MaLichHen']): ?>
+                                                            &nbsp;&nbsp;
+                                                            <i class="fas fa-calendar-check"></i>
+                                                            Appointment: <?php echo htmlspecialchars($record['MaLichHen']); ?>
+                                                        <?php endif; ?>
+                                                    </p>
+                                                    <p class="card-text">
+                                                        <strong>Notes:</strong>
+                                                        <?php echo htmlspecialchars($record['LuuY']); ?>
+                                                    </p>
+                                                </div>
+                                                <div class="col-md-4 text-end">
+                                                    <span class="badge bg-success mb-2">Completed</span>
+                                                    <br>
+                                                    <a href="/medical-records/view/<?php echo $record['MaGiayKhamBenh']; ?>"
+                                                        class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-eye"></i> View Details
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Emergency Room Visit</h6>
-                                <small>5 hours ago</small>
+
+                        <?php if (count($medicalData['MedicalRecords']) > 3): ?>
+                            <div class="text-center mt-3">
+                                <p class="text-muted">Showing 3 of <?php echo count($medicalData['MedicalRecords']); ?> medical records</p>
+                                <a href="<?php echo url('medicalRecords'); ?>" class="btn btn-primary">
+                                    <i class="fas fa-file-medical-alt"></i> View All Medical Records
+                                </a>
                             </div>
-                            <p class="mb-1">Patient: Mike Brown (P003) - Dr. Emergency</p>
-                            <small>Minor injury, treated and discharged</small>
+                        <?php endif; ?>
+
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-file-medical fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Medical Records</h5>
+                            <p class="text-muted">Your medical records will appear here after your appointments.</p>
                         </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
         <!-- Right Column -->
         <div class="col-md-4">
-            <!-- Quick Actions for Patients -->
+            <!-- Quick Actions (keep existing) -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="/appointments/book" class="btn btn-primary">
+                        <a href="<?php echo url('appointments/book'); ?>" class="btn btn-primary">
                             <i class="fas fa-calendar-plus"></i> Book Appointment
                         </a>
-                        <a href="/medical-records" class="btn btn-outline-info">
+                        <a href="<?php echo url('medicalRecords'); ?>" class="btn btn-outline-info">
                             <i class="fas fa-file-medical"></i> View Medical Records
                         </a>
-                        <a href="/prescriptions" class="btn btn-outline-success">
+                        <a href="<?php echo url('prescriptions'); ?>" class="btn btn-outline-success">
                             <i class="fas fa-pills"></i> My Prescriptions
                         </a>
-                        <a href="/lab-results" class="btn btn-outline-warning">
+                        <a href="<?php echo url('labResults'); ?>" class="btn btn-outline-warning">
                             <i class="fas fa-flask"></i> Lab Results
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- User Profile Card -->
+            <!-- User Profile Card (keep existing) -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="fas fa-user"></i> Profile Information</h5>
@@ -172,61 +334,71 @@ ob_start();
                 </div>
             </div>
 
-            <!-- Notifications -->
+            <!-- Health Summary -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-bell"></i> Notifications</h5>
+                    <h5 class="mb-0"><i class="fas fa-heartbeat"></i> Health Summary</h5>
                 </div>
                 <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item border-0 px-0">
-                            <div class="d-flex">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-calendar text-primary"></i>
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <p class="mb-1 small">Appointment reminder: Patient John Doe at 3:00 PM</p>
-                                    <small class="text-muted">1 hour ago</small>
-                                </div>
-                            </div>
+                    <?php
+                    $totalAppointments = 0;
+                    $pendingAppointments = 0;
+                    $totalMedicalRecords = 0;
+
+                    // Appointment stats
+                    if ($appointments && $appointments['status'] === 200 && isset($appointments['data'][0])) {
+                        $totalAppointments = count($appointments['data'][0]);
+                        foreach ($appointments['data'][0] as $apt) {
+                            if ($apt['TrangThai'] === 'ChoXacNhan') {
+                                $pendingAppointments++;
+                            }
+                        }
+                    }
+
+                    // Medical records stats
+                    if ($medicalHistory && $medicalHistory['status'] === 200 && isset($medicalHistory['data'][0]['MedicalRecords'])) {
+                        $totalMedicalRecords = count($medicalHistory['data'][0]['MedicalRecords']);
+                    }
+                    ?>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 class="text-primary"><?php echo $totalAppointments; ?></h4>
+                            <small class="text-muted">Appointments</small>
                         </div>
-                        <div class="list-group-item border-0 px-0">
-                            <div class="d-flex">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-flask text-warning"></i>
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <p class="mb-1 small">Lab results ready for Patient P002</p>
-                                    <small class="text-muted">3 hours ago</small>
-                                </div>
-                            </div>
+                        <div class="col-4">
+                            <h4 class="text-warning"><?php echo $pendingAppointments; ?></h4>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-success"><?php echo $totalMedicalRecords; ?></h4>
+                            <small class="text-muted">Records</small>
                         </div>
                     </div>
+
+                    <?php if ($medicalProfile): ?>
+                        <hr>
+                        <div class="mt-3">
+                            <h6 class="text-info"><i class="fas fa-info-circle"></i> Medical Status</h6>
+                            <span class="badge bg-<?php echo $medicalProfile['is_active'] ? 'success' : 'secondary'; ?>">
+                                <?php echo $medicalProfile['is_active'] ? 'Active Patient' : 'Inactive'; ?>
+                            </span>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 
-<?php else: ?>
-    <!-- Guest Dashboard -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <i class="fas fa-hospital fa-4x text-muted mb-4"></i>
-                    <h3>Welcome to Hospital Management System</h3>
-                    <p class="text-muted">Please log in to access your dashboard and manage hospital operations.</p>
-                    <a href="/login" class="btn btn-primary btn-lg">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
 <?php endif; ?>
+
+<style>
+    .border-left-primary {
+        border-left: 4px solid #007bff !important;
+    }
+</style>
 
 <?php
 $content = ob_get_clean();
-$title = 'Dashboard - Hospital Management System';
+$title = 'Patient Dashboard - Hospital Management System';
 include __DIR__ . '/../layouts/main.php';
 ?>

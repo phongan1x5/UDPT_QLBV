@@ -143,3 +143,34 @@ def delete_department(department_id: int, db: Session = Depends(get_db)):
     db.delete(department)
     db.commit()
     return None
+
+# Add this route for more flexibility:
+@router.get("/staff/by-type/{staff_type}", response_model=list[schemas.StaffResponse])
+def get_staff_by_type(staff_type: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Get all staff members by their type (doctor, desk_staff, lab_staff, pharmacist, admin)
+    """
+    valid_types = ["doctor", "desk_staff", "lab_staff", "pharmacist", "admin"]
+    
+    if staff_type.lower() not in valid_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid staff type. Valid types are: {', '.join(valid_types)}"
+        )
+    
+    staff_members = db.query(models.Staff).filter(
+        models.Staff.LoaiNhanVien == staff_type.lower()
+    ).offset(skip).limit(limit).all()
+    
+    return staff_members
+
+@router.get("/staff/getDoctors", response_model=list[schemas.StaffResponse])
+def get_doctors(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Get all staff members with LoaiNhanVien = 'doctor'
+    """
+    doctors = db.query(models.Staff).filter(
+        models.Staff.LoaiNhanVien == "doctor"
+    ).offset(skip).limit(limit).all()
+    
+    return doctors

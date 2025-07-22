@@ -1,5 +1,4 @@
 <?php
-// In your Patient model or a new Appointment model
 class Appointment
 {
     private $apiGatewayUrl = 'http://localhost:6000';
@@ -41,6 +40,46 @@ class Appointment
         ];
     }
 
+    // Create a new appointment
+    public function createAppointment($appointmentData)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = ['Authorization: Bearer ' . $token];
+        return $this->callApi('/appointments', 'POST', $appointmentData, $headers);
+    }
+
+    // Get all appointments (admin/staff)
+    public function getAllAppointments($skip = 0, $limit = 100)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        return $this->callApi('/appointments?skip=' . $skip . '&limit=' . $limit, 'GET', null, $headers);
+    }
+
+    // Get available time slots for a specific doctor and date
+    public function getAvailableSlots($doctorId, $date)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        return $this->callApi('/appointments/available-slots/' . $doctorId . '/' . $date, 'GET', null, $headers);
+    }
+
+    // Get all doctors
+    public function getAllDoctors()
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        return $this->callApi('staff/getDoctors', 'GET', null, $headers);
+    }
+
     public function getPatientAppointments($patientId)
     {
         $token = $_SESSION['user']['token'] ?? null;
@@ -63,5 +102,33 @@ class Appointment
         $headers = ['Authorization: Bearer ' . $token];
 
         return $this->callApi('/appointments/patient/' . $patientId . '/history?skip=' . $skip . '&limit=' . $limit, 'GET', null, $headers);
+    }
+
+    // Cancel an appointment
+    public function cancelAppointment($appointmentId)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        return $this->callApi('/appointments/' . $appointmentId . '/cancel', 'PUT', null, $headers);
+    }
+
+    // Update appointment status
+    public function updateAppointmentStatus($appointmentId, $status)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        $data = ['TrangThai' => $status];
+        return $this->callApi('/appointments/' . $appointmentId . '/status', 'PUT', $data, $headers);
+    }
+
+    // Get appointment by ID
+    public function getAppointmentById($appointmentId)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        return $this->callApi('/appointments/' . $appointmentId, 'GET', null, $headers);
     }
 }

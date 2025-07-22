@@ -2,11 +2,10 @@
 require_once 'BaseController.php';
 require_once __DIR__ . '/../models/Patient.php';
 require_once __DIR__ . '/../models/Appointment.php';
-require_once __DIR__ . '/../models/MedicalRecord.php';
 
-class HomeController extends BaseController
+class MedicalRecordController extends BaseController
 {
-    private function patientDashboard($user)
+    private function patientMedicalRecords($user)
     {
         // Get patient data from the API
         $patientModel = new Patient();
@@ -33,7 +32,7 @@ class HomeController extends BaseController
         }
 
         // Render the patient dashboard with all data
-        $this->render('dashboard/patient', [
+        $this->render('medicalRecords/patient', [
             'user' => $user,
             'patient' => $patientData,
             'appointments' => $appointments,
@@ -43,7 +42,7 @@ class HomeController extends BaseController
         ]);
     }
 
-    public function dashboard()
+    public function index()
     {
         $this->requireLogin();
 
@@ -58,7 +57,7 @@ class HomeController extends BaseController
         // Handle different roles
         switch ($user['user_role']) {
             case 'patient':
-                $this->patientDashboard($user);
+                $this->patientMedicalRecords($user);
                 break;
             case 'doctor':
                 // TODO: Implement doctor dashboard

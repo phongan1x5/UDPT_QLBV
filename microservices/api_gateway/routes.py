@@ -79,6 +79,15 @@ async def get_patient(patient_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['patient']}/patients/{patient_id}", request=request)
 
 # Staff_service
+# Add these routes to your API Gateway:
+@router.get("/staff/getDoctors")
+async def get_doctors(request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['staff']}/staff/getDoctors", request=request)
+
+@router.get("/staff/by-type/{staff_type}")
+async def get_staff_by_type(staff_type: str, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['staff']}/staff/by-type/{staff_type}", request=request)
+
 @router.post("/staff")
 async def create_staff(request: Request):
     data = await request.json()
@@ -148,12 +157,59 @@ async def list_services(request: Request, skip: int = 0, limit: int = 100):
 async def get_service(service_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['lab']}/services/{service_id}", request=request)
 
+@router.get("/lab/used-services/medical-record/{medical_record_id}")
+async def get_used_services_by_medical_record(medical_record_id: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['lab']}/used-services/medical-record/{medical_record_id}", request=request)
+
 @router.post("/lab/used-services")
 async def create_used_service(request: Request):
-    form_data = await request.form()
-    file = form_data.get("file")
-    data = {key: form_data[key] for key in form_data if key != "file"}
+    data = await request.json()
     return await forward_request("POST", f"{MICROSERVICE_URLS['lab']}/used-services", data=data, request=request)
+
+# Keep the update route as form handling (for file uploads)
+@router.put("/lab/used-services/{used_service_id}")
+async def update_used_service(used_service_id: int, request: Request):
+    # Get the form data from the request (for file uploads)
+    form_data = await request.form()
+    
+    # Extract the Authorization header
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Authorization token is missing")
+    
+    # Prepare headers for the microservice request
+    headers = {"Authorization": auth_header}
+    
+    # Forward the form data to the lab microservice
+    async with httpx.AsyncClient() as client:
+        try:
+            # Prepare form data for forwarding
+            form_data_dict = {}
+            files_dict = {}
+            
+            for key, value in form_data.items():
+                if hasattr(value, 'read'):  # It's a file
+                    content = await value.read()
+                    files_dict[key] = (value.filename, content, value.content_type)
+                else:  # It's regular form field
+                    form_data_dict[key] = str(value)
+            
+            # Make the request to lab microservice with form data
+            response = await client.put(
+                f"{MICROSERVICE_URLS['lab']}/used-services/{used_service_id}",
+                data=form_data_dict,
+                files=files_dict if files_dict else None,
+                headers=headers,
+                timeout=30.0
+            )
+            
+            response.raise_for_status()
+            return response.json()
+            
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
 
 @router.get("/lab/used-services")
 async def list_used_services(request: Request, skip: int = 0, limit: int = 100):
@@ -163,30 +219,75 @@ async def list_used_services(request: Request, skip: int = 0, limit: int = 100):
 async def get_used_service(used_service_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['lab']}/used-services/{used_service_id}", request=request)
 
-# Pharmacy_service
-@router.post("/pharmacy/medicines")
+# === PHARMACY SERVICE ROUTES (CLEANED UP) ===
+# Medicine routes
+@router.post("/medicines")
 async def create_medicine(request: Request):
     data = await request.json()
     return await forward_request("POST", f"{MICROSERVICE_URLS['pharmacy']}/medicines", data=data, request=request)
 
-@router.get("/pharmacy/medicines")
+@router.get("/medicines")
 async def list_medicines(request: Request, skip: int = 0, limit: int = 100):
     return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/medicines?skip={skip}&limit={limit}", request=request)
 
-@router.post("/pharmacy/prescriptions")
+@router.get("/medicines/{medicine_id}")
+async def get_medicine(medicine_id: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/medicines/{medicine_id}", request=request)
+
+@router.put("/medicines/{medicine_id}")
+async def update_medicine(medicine_id: int, request: Request):
+    data = await request.json()
+    return await forward_request("PUT", f"{MICROSERVICE_URLS['pharmacy']}/medicines/{medicine_id}", data=data, request=request)
+
+@router.delete("/medicines/{medicine_id}")
+async def delete_medicine(medicine_id: int, request: Request):
+    return await forward_request("DELETE", f"{MICROSERVICE_URLS['pharmacy']}/medicines/{medicine_id}", request=request)
+
+# Prescription routes
+@router.post("/prescriptions")
 async def create_prescription(request: Request):
     data = await request.json()
     return await forward_request("POST", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions", data=data, request=request)
 
-@router.get("/pharmacy/prescriptions/{prescription_id}")
+@router.get("/prescriptions")
+async def list_prescriptions(request: Request, skip: int = 0, limit: int = 100):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions?skip={skip}&limit={limit}", request=request)
+
+@router.get("/prescriptions/{prescription_id}")
 async def get_prescription(prescription_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/{prescription_id}", request=request)
 
-# MedicalRecord_service
+@router.put("/prescriptions/{prescription_id}")
+async def update_prescription(prescription_id: int, request: Request):
+    data = await request.json()
+    return await forward_request("PUT", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/{prescription_id}", data=data, request=request)
+
+@router.delete("/prescriptions/{prescription_id}")
+async def delete_prescription(prescription_id: int, request: Request):
+    return await forward_request("DELETE", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/{prescription_id}", request=request)
+
+@router.get("/prescriptions/medical-record/{medical_record_id}")
+async def get_prescriptions_by_medical_record(medical_record_id: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/medical-record/{medical_record_id}", request=request)
+
+@router.put("/prescriptions/{prescription_id}/status")
+async def update_prescription_status(prescription_id: int, request: Request):
+    data = await request.json()
+    return await forward_request("PUT", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/{prescription_id}/status", data=data, request=request)
+
+# === MEDICAL RECORD SERVICE ROUTES ===
 @router.post("/medical-profiles")
 async def create_medical_profile(request: Request):
     data = await request.json()
     return await forward_request("POST", f"{MICROSERVICE_URLS['medical_record']}/medical-profiles", data=data, request=request)
+
+@router.get("/medical-profiles")
+async def list_medical_profiles(request: Request, skip: int = 0, limit: int = 100):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-profiles?skip={skip}&limit={limit}", request=request)
+
+@router.get("/medical-profiles/{profile_id}")
+async def get_medical_profile(profile_id: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-profiles/{profile_id}", request=request)
 
 @router.put("/medical-profiles/{profile_id}")
 async def update_medical_profile(profile_id: int, request: Request):
@@ -201,6 +302,14 @@ async def delete_medical_profile(profile_id: int, request: Request):
 async def create_medical_record(request: Request):
     data = await request.json()
     return await forward_request("POST", f"{MICROSERVICE_URLS['medical_record']}/medical-records", data=data, request=request)
+
+@router.get("/medical-records")
+async def list_medical_records(request: Request, skip: int = 0, limit: int = 100):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-records?skip={skip}&limit={limit}", request=request)
+
+@router.get("/medical-records/{record_id}")
+async def get_medical_record(record_id: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-records/{record_id}", request=request)
 
 @router.put("/medical-records/{record_id}")
 async def update_medical_record(record_id: int, request: Request):

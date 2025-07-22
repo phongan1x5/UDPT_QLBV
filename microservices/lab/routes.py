@@ -37,17 +37,12 @@ def get_service(service_id: int, db: Session = Depends(get_db)):
     return service
 
 @router.post("/used-services", response_model=schemas.DichVuSuDungResponse)
-async def create_used_service(
-    MaDichVu: int = Form(...),
-    MaGiayKhamBenh: int = Form(...),
-    ThoiGian: str = Form(...),
-    db: Session = Depends(get_db)
-):
-    # Create the used service record without KetQua or FileKetQua
+def create_used_service(used_service: schemas.DichVuSuDungCreate, db: Session = Depends(get_db)):
+    # Create the used service record without KetQua or FileKetQua (initially)
     db_used_service = models.DichVuSuDung(
-        MaDichVu=MaDichVu,
-        MaGiayKhamBenh=MaGiayKhamBenh,
-        ThoiGian=ThoiGian,
+        MaDichVu=used_service.MaDichVu,
+        MaGiayKhamBenh=used_service.MaGiayKhamBenh,
+        ThoiGian=used_service.ThoiGian,
         KetQua=None,  # Initially no result
         FileKetQua=None  # Initially no file
     )
@@ -96,3 +91,38 @@ def get_used_service(used_service_id: int, db: Session = Depends(get_db)):
     if not used_service:
         raise HTTPException(status_code=404, detail="Used service not found")
     return used_service
+
+@router.get("/used-services/medical-record/{medical_record_id}")
+def get_used_services_by_medical_record(medical_record_id: int, db: Session = Depends(get_db)):
+    """Get all lab services used for a specific medical record"""
+    used_services = db.query(models.DichVuSuDung).filter(
+        models.DichVuSuDung.MaGiayKhamBenh == medical_record_id
+    ).all()
+    
+    if not used_services:
+        raise HTTPException(status_code=404, detail=f"No lab services found for medical record {medical_record_id}")
+    
+    # Get service details for each used service
+    result = []
+    for used_service in used_services:
+        # Get the service details
+        service = db.query(models.DichVu).filter(
+            models.DichVu.MaDichVu == used_service.MaDichVu
+        ).first()
+        
+        service_data = {
+            "MaDVSD": used_service.MaDVSD,
+            "MaDichVu": used_service.MaDichVu,
+            "MaGiayKhamBenh": used_service.MaGiayKhamBenh,
+            "ThoiGian": used_service.ThoiGian,
+            "KetQua": used_service.KetQua,
+            "FileKetQua": used_service.FileKetQua,
+            "Service": {
+                "TenDichVu": service.TenDichVu if service else "Unknown Service",
+                "NoiDungDichVu": service.NoiDungDichVu if service else "",
+                "DonGia": service.DonGia if service else 0
+            } if service else None
+        }
+        result.append(service_data)
+    
+    return result

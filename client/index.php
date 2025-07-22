@@ -7,6 +7,10 @@ require_once 'src/controllers/BaseController.php';
 require_once 'src/controllers/AuthController.php';
 require_once 'src/controllers/HomeController.php';
 require_once 'src/controllers/ProfileController.php';
+require_once 'src/controllers/PrescriptionController.php';
+require_once 'src/controllers/MedicalRecordController.php';
+require_once 'src/controllers/LabController.php';
+require_once 'src/controllers/AppointmentController.php';
 
 // Simple routing
 $request = $_SERVER['REQUEST_URI'];
@@ -70,6 +74,33 @@ switch ($pathParts[0]) {
     case 'profile':
         $controller = new ProfileController();
         $controller->profile();
+        break;
+
+    case 'appointments':
+        $controller = new AppointmentController();
+        if (isset($pathParts[1])) {
+            if ($pathParts[1] == 'book') {
+                $controller->book();
+                break;
+            }
+            break;
+        }
+        $controller->index();
+        break;
+
+    case 'prescriptions':
+        $controller = new PrescriptionController();
+        $controller->index();
+        break;
+
+    case 'medicalRecords':
+        $controller = new MedicalRecordController();
+        $controller->index();
+        break;
+
+    case 'labResults':
+        $controller = new LabController();
+        $controller->index();
         break;
 
     default:

@@ -1,7 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, Boolean
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from database import Base
 
 class HoSoBenhAn(Base):
     __tablename__ = "HoSoBenhAn"  # Table name for medical history

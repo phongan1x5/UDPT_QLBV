@@ -30,3 +30,19 @@ class DichVuSuDungResponse(DichVuSuDungBase):
 
     class Config:
         orm_mode = True
+
+class DichVuSuDungCreate(BaseModel):
+    MaDichVu: int
+    MaGiayKhamBenh: int
+    ThoiGian: str  # ISO format datetime string
+
+class DichVuSuDungResponse(BaseModel):
+    MaDVSD: int
+    MaDichVu: int
+    MaGiayKhamBenh: int
+    ThoiGian: str
+    KetQua: Optional[str] = None
+    FileKetQua: Optional[str] = None
+
+    class Config:
+        from_attributes = True

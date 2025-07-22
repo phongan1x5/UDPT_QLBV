@@ -15,7 +15,7 @@ class ThuocResponse(ThuocBase):
     MaThuoc: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # Updated for newer Pydantic
 
 class ThuocTheoToaBase(BaseModel):
     MaThuoc: int
@@ -29,18 +29,26 @@ class ThuocTheoToaResponse(ThuocTheoToaBase):
     MaToaThuoc: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ToaThuocBase(BaseModel):
     MaGiayKhamBenh: int
     TrangThaiToaThuoc: str
 
 class ToaThuocCreate(ToaThuocBase):
-    ThuocTheoToa: List[ThuocTheoToaCreate]
+    ThuocTheoToa: List[ThuocTheoToaCreate] = []  # Made optional
 
+# Simple response without relationships for create/list operations
 class ToaThuocResponse(ToaThuocBase):
     MaToaThuoc: int
-    ThuocTheoToa: List[ThuocTheoToaResponse]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+# Detailed response with relationships for specific queries
+class ToaThuocDetailResponse(ToaThuocBase):
+    MaToaThuoc: int
+    ThuocTheoToa: List[ThuocTheoToaResponse] = []
+
+    class Config:
+        from_attributes = True
