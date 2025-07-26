@@ -97,12 +97,20 @@ class AppointmentController extends BaseController
         $doctors = [];
 
         if ($doctorsResponse['status'] === 200) {
-            $doctors = $doctorsResponse['data'] ?? [];
+            // Fix: Remove the [0] index - the data should be the array directly
+            $doctorsData = $doctorsResponse['data'] ?? [];
+
+            // Handle double-wrapped response
+            if (is_array($doctorsData) && isset($doctorsData[0]) && is_array($doctorsData[0])) {
+                $doctors = $doctorsData[0]; // Extract from double-wrapped format
+            } else {
+                $doctors = $doctorsData;
+            }
         }
 
         $this->render('appointments/book', [
             'user' => $user,
-            'doctors' => $doctors,
+            'doctors' => $doctors, // Remove the [0] index
             'patientId' => $patientId
         ]);
     }
@@ -126,7 +134,7 @@ class AppointmentController extends BaseController
         $today = new DateTime();
         $today->setTime(0, 0, 0);
 
-        if ($appointmentDate < $today) {
+        if ($appointmentDate <= $today) {
             $_SESSION['error'] = 'Appointment date must be in the future.';
             $this->redirect('appointments/book');
             return;
@@ -140,24 +148,54 @@ class AppointmentController extends BaseController
             return;
         }
 
-        // Prepare appointment data
+        // Check if the time slot is still available
+        $availabilityResponse = $this->appointmentModel->getAvailableSlots($doctorId, $date);
+        if ($availabilityResponse['status'] === 200) {
+            $availableSlots = $availabilityResponse['data'][0]['data'] ?? [];
+            $timeAvailable = false;
+
+            foreach ($availableSlots as $slot) {
+                if ($slot['time'] === $time) {
+                    $timeAvailable = true;
+                    break;
+                }
+            }
+
+            if (!$timeAvailable) {
+                $_SESSION['error'] = 'Selected time slot is no longer available. Please choose another time.';
+                $this->redirect('appointments/book');
+                return;
+            }
+        }
+
+        // Prepare appointment data with correct status enum
         $appointmentData = [
-            'MaBenhNhan' => $patientId,
-            'MaBacSi' => $doctorId,
+            'MaBenhNhan' => intval($patientId),
+            'MaBacSi' => intval($doctorId),
             'Ngay' => $date,
             'Gio' => $time . ':00', // Add seconds
-            'LyDo' => $reason,
-            'TrangThai' => 'scheduled'
+            'LoaiLichHen' => $reason ?: 'Khám tổng quát', // Set default reason
+            'TrangThai' => 'ChoXacNhan' // Use correct Vietnamese enum value
         ];
 
         // Create appointment
         $response = $this->appointmentModel->createAppointment($appointmentData);
 
         if ($response['status'] === 200 || $response['status'] === 201) {
-            $_SESSION['success'] = 'Appointment booked successfully!';
+            $_SESSION['success'] = 'Appointment booked successfully! Please wait for confirmation.';
             $this->redirect('appointments');
         } else {
-            $errorMessage = $response['data']['detail'] ?? 'Failed to book appointment. Please try again.';
+            // Handle error response
+            $errorMessage = 'Failed to book appointment. Please try again.';
+
+            if (isset($response['data']) && is_array($response['data'])) {
+                if (isset($response['data'][0]['detail'])) {
+                    $errorMessage = $response['data'][0]['detail'];
+                } elseif (isset($response['data']['detail'])) {
+                    $errorMessage = $response['data']['detail'];
+                }
+            }
+
             $_SESSION['error'] = $errorMessage;
             $this->redirect('appointments/book');
         }

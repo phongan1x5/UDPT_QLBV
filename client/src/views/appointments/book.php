@@ -1,5 +1,9 @@
 <?php
+require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
+echo '<pre>';
+print_r($doctors[0]);
+echo '</pre>';
 ?>
 
 <div class="container-fluid">
@@ -33,7 +37,7 @@ ob_start();
                     <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Appointment Details</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/appointments/book" id="bookingForm">
+                    <form method="POST" action="<?php echo url('appointments/book'); ?>" id="bookingForm">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="doctor_id" class="form-label">
@@ -42,8 +46,8 @@ ob_start();
                                 <select class="form-select" id="doctor_id" name="doctor_id" required>
                                     <option value="">Choose a doctor...</option>
                                     <?php foreach ($doctors as $doctor): ?>
-                                        <option value="<?php echo $doctor['MaBacSi']; ?>">
-                                            Dr. <?php echo htmlspecialchars($doctor['TenBacSi']); ?>
+                                        <option value="<?php echo $doctor['MaNhanVien']; ?>">
+                                            Dr. <?php echo htmlspecialchars($doctor['HoTen']); ?>
                                             <?php if (isset($doctor['ChuyenKhoa'])): ?>
                                                 - <?php echo htmlspecialchars($doctor['ChuyenKhoa']); ?>
                                             <?php endif; ?>
@@ -84,8 +88,11 @@ ob_start();
                                 <label for="reason" class="form-label">
                                     <i class="fas fa-comment"></i> Reason for Visit
                                 </label>
-                                <input type="text" class="form-control" id="reason" name="reason"
-                                    placeholder="e.g., Regular checkup, Follow-up, etc.">
+                                <select class="form-select" id="reason" name="reason" required disabled>
+                                    <option value="">Select reason</option>
+                                    <option value="KhamMoi">Khám mới</option>
+                                    <option value="TaiKham">Tái khám</option>
+                                </select>
                             </div>
                         </div>
 
@@ -123,8 +130,12 @@ ob_start();
         const doctorSelect = document.getElementById('doctor_id');
         const dateInput = document.getElementById('appointment_date');
         const timeSelect = document.getElementById('appointment_time');
+        const reasonSelect = document.getElementById('reason');
         const timeLoading = document.getElementById('time-loading');
         const submitBtn = document.getElementById('submitBtn');
+
+        // Get the base URL from PHP
+        const baseUrl = '<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>';
 
         // Disable weekends
         dateInput.addEventListener('input', function() {
@@ -149,30 +160,70 @@ ob_start();
             if (!doctorId || !date) {
                 timeSelect.disabled = true;
                 timeSelect.innerHTML = '<option value="">Select date and doctor first</option>';
+                reasonSelect.disabled = true; // Disable reason until doctor and date are selected
                 return;
             }
+
+            // Enable reason dropdown when doctor and date are selected
+            reasonSelect.disabled = false;
 
             timeLoading.classList.remove('d-none');
             timeSelect.disabled = true;
             timeSelect.innerHTML = '<option value="">Loading...</option>';
 
-            fetch(`/appointments/available-slots?doctor_id=${doctorId}&date=${date}`)
-                .then(response => response.json())
+            const apiUrl = `${baseUrl}/appointments/available-slots?doctor_id=${doctorId}&date=${date}`;
+            console.log('Fetching URL:', apiUrl);
+
+            fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Raw API Response:', data);
                     timeLoading.classList.add('d-none');
 
-                    if (data.status === 200 && data.data && data.data.length > 0) {
+                    // Handle the double-wrapped response format
+                    let responseData = data;
+
+                    // Check if it's wrapped in {"status":200,"data":[{actual_data}, 200]}
+                    if (data.status === 200 && Array.isArray(data.data) && data.data.length >= 1) {
+                        responseData = data.data[0]; // Extract the first element which contains the actual data
+                    }
+
+                    console.log('Processed responseData:', responseData);
+
+                    if (responseData && responseData.status === 200 && responseData.data && responseData.data.length > 0) {
                         timeSelect.innerHTML = '<option value="">Select a time slot</option>';
-                        data.data.forEach(slot => {
+                        responseData.data.forEach(slot => {
                             const option = document.createElement('option');
                             option.value = slot.time;
                             option.textContent = slot.display_time;
                             timeSelect.appendChild(option);
                         });
                         timeSelect.disabled = false;
+
+                        // Show availability info
+                        showAvailabilityInfo(responseData.total_available, responseData.total_booked);
+                    } else if (responseData && responseData.status === 400) {
+                        // Handle validation errors (weekends, past dates, etc.)
+                        timeSelect.innerHTML = '<option value="">Invalid date selected</option>';
+                        timeSelect.disabled = true;
+                        showError(responseData.detail || 'Invalid date selected');
                     } else {
+                        // No available slots or other error
                         timeSelect.innerHTML = '<option value="">No available slots</option>';
                         timeSelect.disabled = true;
+                        showAvailabilityInfo(0, responseData?.total_booked || 0);
                     }
                 })
                 .catch(error => {
@@ -180,51 +231,112 @@ ob_start();
                     timeLoading.classList.add('d-none');
                     timeSelect.innerHTML = '<option value="">Error loading slots</option>';
                     timeSelect.disabled = true;
+                    showError('Failed to load available time slots. Please try again.');
                 });
         }
 
-        // Generate default time slots if API doesn't provide them
-        function generateDefaultTimeSlots() {
-            const slots = [];
-
-            // Morning slots: 7:30 AM - 11:15 AM
-            for (let hour = 7; hour <= 11; hour++) {
-                for (let minute of [0, 15, 30, 45]) {
-                    if (hour === 7 && minute < 30) continue;
-                    if (hour === 11 && minute > 15) continue;
-
-                    const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                    const displayTime = formatTime(hour, minute);
-                    slots.push({
-                        time,
-                        display_time: displayTime
-                    });
-                }
+        function showAvailabilityInfo(available, booked) {
+            let infoDiv = document.getElementById('availability-info');
+            if (!infoDiv) {
+                infoDiv = document.createElement('div');
+                infoDiv.id = 'availability-info';
+                infoDiv.className = 'mt-2';
+                timeSelect.parentNode.appendChild(infoDiv);
             }
 
-            // Afternoon slots: 1:30 PM - 5:15 PM
-            for (let hour = 13; hour <= 17; hour++) {
-                for (let minute of [0, 15, 30, 45]) {
-                    if (hour === 13 && minute < 30) continue;
-                    if (hour === 17 && minute > 15) continue;
+            const total = available + booked;
+            const availabilityPercentage = total > 0 ? Math.round((available / total) * 100) : 0;
 
-                    const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                    const displayTime = formatTime(hour, minute);
-                    slots.push({
-                        time,
-                        display_time: displayTime
-                    });
-                }
+            infoDiv.innerHTML = `
+                <div class="row text-center">
+                    <div class="col-4">
+                        <small class="text-success">
+                            <i class="fas fa-check-circle"></i><br>
+                            ${available} Available
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-danger">
+                            <i class="fas fa-times-circle"></i><br>
+                            ${booked} Booked
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-info">
+                            <i class="fas fa-percentage"></i><br>
+                            ${availabilityPercentage}% Available
+                        </small>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            let infoDiv = document.getElementById('availability-info');
+            if (!infoDiv) {
+                infoDiv = document.createElement('div');
+                infoDiv.id = 'availability-info';
+                infoDiv.className = 'mt-2';
+                timeSelect.parentNode.appendChild(infoDiv);
             }
 
-            return slots;
+            infoDiv.innerHTML = `
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
         }
 
-        function formatTime(hour, minute) {
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-            return `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
-        }
+        // Form submission validation
+        const bookingForm = document.getElementById('bookingForm');
+        bookingForm.addEventListener('submit', function(e) {
+            const doctorId = doctorSelect.value;
+            const date = dateInput.value;
+            const time = timeSelect.value;
+            const reason = reasonSelect.value;
+
+            if (!doctorId || !date || !time || !reason) {
+                e.preventDefault();
+                alert('Please fill in all required fields: Doctor, Date, Time, and Reason.');
+                return false;
+            }
+
+            // Double-check if it's a weekday
+            const selectedDate = new Date(date);
+            const dayOfWeek = selectedDate.getDay();
+
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                e.preventDefault();
+                alert('Appointments are only available Monday to Friday.');
+                return false;
+            }
+
+            // Check if date is in the future
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            selectedDate.setHours(0, 0, 0, 0);
+
+            if (selectedDate <= today) {
+                e.preventDefault();
+                alert('Please select a future date.');
+                return false;
+            }
+
+            // Disable submit button to prevent double submission
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+
+            return true;
+        });
+
+        // Reset form state if user navigates back
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment';
+            }
+        });
     });
 </script>
 

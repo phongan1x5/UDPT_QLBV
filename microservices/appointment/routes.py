@@ -134,3 +134,129 @@ def delete_appointment(appointment_id: int, db: Session = Depends(get_db)):
 @router.get("/appointments/doctor/{doctor_id}", response_model=list[schemas.AppointmentResponse])
 def get_appointments_for_doctor(doctor_id: int, db: Session = Depends(get_db)):
     return db.query(models.Appointment).filter(models.Appointment.MaBacSi == doctor_id).all()
+
+@router.get("/appointments/available-slots/{doctor_id}/{date}")
+def get_available_slots(doctor_id: int, date: str, db: Session = Depends(get_db)):
+    """
+    Get available time slots for a doctor on a specific date
+    Returns all valid time slots that are not already booked
+    """
+    try:
+        # Parse and validate the date
+        appointment_date = datetime.strptime(date, "%Y-%m-%d")
+        
+        # Check if it's a valid day (Monday to Friday)
+        if not is_valid_day(appointment_date):
+            raise HTTPException(
+                status_code=400, 
+                detail="Appointments are only available Monday to Friday."
+            )
+        
+        # Check if the date is in the future
+        today = datetime.now().date()
+        if appointment_date.date() <= today:
+            raise HTTPException(
+                status_code=400,
+                detail="Appointments can only be booked for future dates."
+            )
+        
+        # Get all booked appointments for this doctor on this date
+        booked_appointments = db.query(models.Appointment).filter(
+            models.Appointment.MaBacSi == doctor_id,
+            models.Appointment.Ngay == date,
+            models.Appointment.TrangThai.in_(["ChoXacNhan", "DaXacNhan"])  # Only active appointments
+        ).all()
+        
+        # Extract booked time slots
+        booked_times = {appointment.Gio for appointment in booked_appointments}
+        
+        # Define all valid time slots
+        valid_slots = [
+            time(hour=7, minute=30), time(hour=7, minute=45), time(hour=8, minute=0),
+            time(hour=8, minute=15), time(hour=8, minute=30), time(hour=8, minute=45),
+            time(hour=9, minute=0), time(hour=9, minute=15), time(hour=9, minute=30),
+            time(hour=9, minute=45), time(hour=10, minute=0), time(hour=10, minute=15),
+            time(hour=10, minute=30), time(hour=10, minute=45), time(hour=11, minute=0),
+            time(hour=11, minute=15), time(hour=13, minute=30), time(hour=13, minute=45),
+            time(hour=14, minute=0), time(hour=14, minute=15), time(hour=14, minute=30),
+            time(hour=14, minute=45), time(hour=15, minute=0), time(hour=15, minute=15),
+            time(hour=15, minute=30), time(hour=15, minute=45), time(hour=16, minute=0),
+            time(hour=16, minute=15), time(hour=16, minute=30), time(hour=16, minute=45),
+            time(hour=17, minute=0), time(hour=17, minute=15)
+        ]
+        
+        # Filter out booked slots and format for response
+        available_slots = []
+        for slot in valid_slots:
+            if slot not in booked_times:
+                # Format time for display
+                display_time = slot.strftime("%I:%M %p")  # e.g., "02:30 PM"
+                api_time = slot.strftime("%H:%M")  # e.g., "14:30" for API
+                
+                available_slots.append({
+                    "time": api_time,
+                    "display_time": display_time,
+                    "available": True
+                })
+        
+        return {
+            "status": 200,
+            "data": available_slots,
+            "doctor_id": doctor_id,
+            "date": date,
+            "total_available": len(available_slots),
+            "total_booked": len(booked_times)
+        }
+        
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid date format. Please use YYYY-MM-DD format."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving available slots: {str(e)}"
+        )
+
+@router.get("/appointments/available-slots/{doctor_id}/{date}/summary")
+def get_slots_summary(doctor_id: int, date: str, db: Session = Depends(get_db)):
+    """
+    Get a summary of available vs booked slots for a doctor on a specific date
+    """
+    try:
+        appointment_date = datetime.strptime(date, "%Y-%m-%d")
+        
+        if not is_valid_day(appointment_date):
+            return {
+                "status": 400,
+                "message": "No appointments available on weekends",
+                "available_slots": 0,
+                "booked_slots": 0,
+                "total_slots": 0
+            }
+        
+        # Get booked appointments
+        booked_count = db.query(models.Appointment).filter(
+            models.Appointment.MaBacSi == doctor_id,
+            models.Appointment.Ngay == date,
+            models.Appointment.TrangThai.in_(["scheduled", "confirmed"])
+        ).count()
+        
+        total_slots = 32  # Total number of available time slots per day
+        available_slots = total_slots - booked_count
+        
+        return {
+            "status": 200,
+            "doctor_id": doctor_id,
+            "date": date,
+            "available_slots": available_slots,
+            "booked_slots": booked_count,
+            "total_slots": total_slots,
+            "availability_percentage": round((available_slots / total_slots) * 100, 2)
+        }
+        
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

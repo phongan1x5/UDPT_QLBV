@@ -143,6 +143,14 @@ async def delete_appointment(appointment_id: int, request: Request):
 async def get_appointments_for_doctor(doctor_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['appointment']}/appointments/doctor/{doctor_id}", request=request)
 
+@router.get("/appointments/available-slots/{doctor_id}/{date}")
+async def get_available_slots(doctor_id: int, date: str, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['appointment']}/appointments/available-slots/{doctor_id}/{date}", request=request)
+
+@router.get("/appointments/available-slots/{doctor_id}/{date}/summary")
+async def get_slots_summary(doctor_id: int, date: str, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['appointment']}/appointments/available-slots/{doctor_id}/{date}/summary", request=request)
+
 # Lab_service
 @router.post("/lab/services")
 async def create_service(request: Request):

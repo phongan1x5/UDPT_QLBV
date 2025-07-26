@@ -83,6 +83,10 @@ switch ($pathParts[0]) {
                 $controller->book();
                 break;
             }
+            if ($pathParts[1] == 'available-slots') {
+                $controller->getAvailableSlots();
+                break;
+            }
             break;
         }
         $controller->index();

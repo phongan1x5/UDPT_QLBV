@@ -77,7 +77,8 @@ class Appointment
         $token = $_SESSION['user']['token'] ?? null;
         $headers = ['Authorization: Bearer ' . $token];
 
-        return $this->callApi('staff/getDoctors', 'GET', null, $headers);
+        // Add missing leading slash to the endpoint
+        return $this->callApi('/staff/getDoctors', 'GET', null, $headers);
     }
 
     public function getPatientAppointments($patientId)

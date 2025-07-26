@@ -175,7 +175,7 @@ echo '</pre>';
                     <h5 class="mb-0">
                         <i class="fas fa-file-medical"></i> Recent Medical Records
                     </h5>
-                    <a href="/medical-records" class="btn btn-sm btn-outline-primary">
+                    <a href="/medicalRecords" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-eye"></i> View All
                     </a>
                 </div>

@@ -67,6 +67,17 @@ def create_staff(staff: schemas.StaffCreate, db: Session = Depends(get_db)):
 
     return db_staff
 
+@router.get("/staff/getDoctors", response_model=list[schemas.StaffResponse])
+def get_doctors(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Get all staff members with LoaiNhanVien = 'doctor'
+    """
+    doctors = db.query(models.Staff).filter(
+        models.Staff.LoaiNhanVien == "doctor"
+    ).offset(skip).limit(limit).all()
+    
+    return doctors
+
 @router.get("/staff", response_model=list[schemas.StaffResponse])
 def list_staff(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(models.Staff).offset(skip).limit(limit).all()
@@ -163,14 +174,3 @@ def get_staff_by_type(staff_type: str, skip: int = 0, limit: int = 100, db: Sess
     ).offset(skip).limit(limit).all()
     
     return staff_members
-
-@router.get("/staff/getDoctors", response_model=list[schemas.StaffResponse])
-def get_doctors(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """
-    Get all staff members with LoaiNhanVien = 'doctor'
-    """
-    doctors = db.query(models.Staff).filter(
-        models.Staff.LoaiNhanVien == "doctor"
-    ).offset(skip).limit(limit).all()
-    
-    return doctors
