@@ -122,13 +122,13 @@ echo '</pre>';
                                                 ?>
                                                 <span class="badge <?php echo $badgeClass; ?>"><?php echo $statusText; ?></span>
                                             </td>
-                                            <td>
+                                            <!-- <td>
                                                 <div class="btn-group btn-group-sm" role="group">
                                                     <a href="/appointments/view/<?php echo $appointment['MaLichHen']; ?>"
                                                         class="btn btn-outline-primary btn-sm" title="View Details">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <?php if ($appointment['TrangThai'] === 'ChoXacNhan'): ?>
+                                                    <//?php if ($appointment['TrangThai'] === 'ChoXacNhan'): ?>
                                                         <a href="/appointments/edit/<?php echo $appointment['MaLichHen']; ?>"
                                                             class="btn btn-outline-warning btn-sm" title="Edit">
                                                             <i class="fas fa-edit"></i>
@@ -138,9 +138,9 @@ echo '</pre>';
                                                             onclick="return confirm('Are you sure you want to cancel this appointment?')">
                                                             <i class="fas fa-times"></i>
                                                         </a>
-                                                    <?php endif; ?>
+                                                    <//?php endif; ?>
                                                 </div>
-                                            </td>
+                                            </td> -->
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -175,9 +175,9 @@ echo '</pre>';
                     <h5 class="mb-0">
                         <i class="fas fa-file-medical"></i> Recent Medical Records
                     </h5>
-                    <a href="/medicalRecords" class="btn btn-sm btn-outline-primary">
+                    <!-- <a href="/medicalRecords" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-eye"></i> View All
-                    </a>
+                    </a> -->
                 </div>
                 <div class="card-body">
                     <?php
@@ -324,13 +324,13 @@ echo '</pre>';
                             </span>
                         </div>
                     </div>
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-12">
                             <a href="/profile" class="btn btn-outline-primary btn-sm w-100">
                                 <i class="fas fa-edit"></i> Edit Profile
                             </a>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 
