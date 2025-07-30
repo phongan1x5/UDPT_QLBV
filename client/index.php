@@ -11,7 +11,7 @@ require_once 'src/controllers/PrescriptionController.php';
 require_once 'src/controllers/MedicalRecordController.php';
 require_once 'src/controllers/LabController.php';
 require_once 'src/controllers/AppointmentController.php';
-
+require_once 'src/controllers/PharmacyController.php';
 // Simple routing
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
@@ -104,9 +104,53 @@ switch ($pathParts[0]) {
 
     case 'labResults':
         $controller = new LabController();
-        $controller->index();
+        if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->updateUsedService();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->createService();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
+            $controller->addServiceForm();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->searchService();
+        } else {
+            $controller->index();
+        }
         break;
 
+    case 'lab':
+        $controller = new LabController();
+        if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->updateUsedService();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->createService();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->createUsedService();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
+            $controller->addServiceForm();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->searchService();
+        } else if (isset($pathParts[2]) && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->searchUsedServices();
+        } else if (isset($pathParts[1]) && $pathParts[1] === 'addusedservice') {
+            $controller->addUsedServiceForm();
+        } else {
+            $controller->index();
+        }
+        break;
+    case 'pharmacy':
+        $controller = new PharmacyController();
+        if (isset($pathParts[1]) && $pathParts[1] === 'medicine' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->addMedicine();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'addmedicine') {
+            $controller->addMedicineForm();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'update-status' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->updateStatus();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'medicines') {
+            $controller->medicines();
+        } else {
+            $controller->index();
+        }
+        break;
     default:
         http_response_code(404);
         echo "Page not found - Path: " . $path;

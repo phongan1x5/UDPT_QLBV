@@ -3,6 +3,7 @@ require_once 'BaseController.php';
 require_once __DIR__ . '/../models/Patient.php';
 require_once __DIR__ . '/../models/Appointment.php';
 require_once __DIR__ . '/../models/MedicalRecord.php';
+require_once __DIR__ . '/../models/Lab.php';
 
 class HomeController extends BaseController
 {
