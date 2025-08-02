@@ -315,9 +315,17 @@ async def create_medical_record(request: Request):
 async def list_medical_records(request: Request, skip: int = 0, limit: int = 100):
     return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-records?skip={skip}&limit={limit}", request=request)
 
-@router.get("/medical-records/{record_id}")
+@router.get("/medical-record/byAppointmentId/{appointmentId}")
+async def get_medical_record_by_appointmentId(appointmentId: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-record/byAppointmentId/{appointmentId}", request=request)
+
+@router.get("/medical-record/byDoctorId/{doctorId}")
+async def get_medical_record_by_appointmentId(doctorId: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-record/byDoctorId/{doctorId}", request=request)
+
+@router.get("/medical-record/{record_id}")
 async def get_medical_record(record_id: int, request: Request):
-    return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-records/{record_id}", request=request)
+    return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-record/{record_id}", request=request)
 
 @router.put("/medical-records/{record_id}")
 async def update_medical_record(record_id: int, request: Request):

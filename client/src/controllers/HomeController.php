@@ -1,6 +1,7 @@
 <?php
 require_once 'BaseController.php';
 require_once __DIR__ . '/../models/Patient.php';
+require_once __DIR__ . '/../models/Staff.php';
 require_once __DIR__ . '/../models/Appointment.php';
 require_once __DIR__ . '/../models/MedicalRecord.php';
 
@@ -43,6 +44,44 @@ class HomeController extends BaseController
         ]);
     }
 
+    private function doctorDashboard($user)
+    {
+        // Get staff data from the API
+        $staffModel = new Staff();
+        $staffData = $staffModel->getStaffById($user['user_id']);
+
+        // Initialize data arrays
+        $appointments = [];
+        $upcomingAppointments = [];
+        $appointmentHistory = [];
+        $medicalHistory = [];
+
+        if ($staffData && $staffData['status'] === 200 && isset($staffData['data'][0])) {
+            $staffId = $staffData['data'][0]['MaNhanVien']; // This is the doctor's ID
+
+            // Use the Appointment model methods for DOCTOR appointments
+            $appointmentModel = new Appointment();
+
+            // Fix: Use doctor-specific methods instead of patient methods
+            $appointments = $appointmentModel->getDoctorAppointments($staffId);
+            $upcomingAppointments = $appointmentModel->getDoctorUpcomingAppointments($staffId);
+            $appointmentHistory = $appointmentModel->getDoctorAppointmentHistory($staffId, 0, 5);
+
+            // Medical history is not relevant for doctor dashboard
+            // Remove or modify this for doctor-specific medical records they've created
+        }
+
+        // Render the doctor dashboard with all data
+        $this->render('dashboard/doctor', [
+            'user' => $user,
+            'doctor' => $staffData,
+            'appointments' => $appointments,
+            'upcomingAppointments' => $upcomingAppointments,
+            'appointmentHistory' => $appointmentHistory,
+            'medicalHistory' => $medicalHistory
+        ]);
+    }
+
     public function dashboard()
     {
         $this->requireLogin();
@@ -62,7 +101,7 @@ class HomeController extends BaseController
                 break;
             case 'doctor':
                 // TODO: Implement doctor dashboard
-                $this->render('dashboard', ['user' => $user]);
+                $this->doctorDashboard($user);
                 break;
             case 'admin':
                 // TODO: Implement admin dashboard

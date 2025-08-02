@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, time
 import models, schemas, database
+import httpx
+from typing import Optional
 
 router = APIRouter()
 
@@ -34,8 +36,69 @@ def is_valid_day(appointment_date: datetime):
     weekday = appointment_date.weekday()  # Monday = 0, Sunday = 6
     return weekday in range(0, 5)  # Monday to Friday
 
+async def create_medical_record(appointment_id: int, patient_id: int, doctor_id: int):
+    """Create a medical record (GiayKhamBenh) for the appointment"""
+    try:
+        async with httpx.AsyncClient() as client:
+            # Get the existing medical profile (HoSoBenhAn) for the patient
+            try:
+                profile_response = await client.get(
+                    f"http://api_gateway:6000/medical-profiles/patient/{patient_id}",
+                    timeout=10.0
+                )
+                
+                if profile_response.status_code == 200:
+                    profile_data = profile_response.json()
+                    medical_profile_id = profile_data.get('MaHSBA')
+                    print(f"Found medical profile {medical_profile_id} for patient {patient_id}")
+                else:
+                    print(f"Failed to get medical profile for patient {patient_id}: {profile_response.status_code}")
+                    return None
+                    
+            except Exception as e:
+                print(f"Error getting medical profile for patient {patient_id}: {str(e)}")
+                return None
+            
+            # Create the medical record (GiayKhamBenh) with the existing MaHSBA
+            if medical_profile_id:
+                medical_record_data = {
+                    "MaHSBA": medical_profile_id,  # Use the actual medical profile ID
+                    "BacSi": doctor_id,  # Doctor ID (MaNhanVien)
+                    "MaLichHen": appointment_id,  # Appointment ID
+                    "NgayKham": datetime.now().strftime("%Y-%m-%d"),  # Examination date
+                    "ChanDoan": "Pending examination",  # Initial diagnosis - will be updated during consultation
+                    "LuuY": f"Medical record created for appointment #{appointment_id} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"  # Notes
+                }
+                
+                try:
+                    record_response = await client.post(
+                        "http://api_gateway:6000/medical-records",
+                        json=medical_record_data,
+                        timeout=10.0
+                    )
+                    
+                    if record_response.status_code in [200, 201]:
+                        record_result = record_response.json()
+                        print(f"Successfully created medical record {record_result.get('MaGiayKhamBenh', 'Unknown')} for appointment {appointment_id}")
+                        return record_result
+                    else:
+                        print(f"Failed to create medical record: {record_response.status_code} - {record_response.text}")
+                        return None
+                        
+                except Exception as e:
+                    print(f"Error creating medical record: {str(e)}")
+                    return None
+            else:
+                print(f"No medical profile ID found for patient {patient_id}")
+                return None
+                
+    except Exception as e:
+        print(f"Error in create_medical_record: {str(e)}")
+        return None
+
+# Now update the create_appointment function to use the medical record creation
 @router.post("/appointments", response_model=schemas.AppointmentResponse)
-def create_appointment(appointment: schemas.AppointmentCreate, db: Session = Depends(get_db)):
+async def create_appointment(appointment: schemas.AppointmentCreate, db: Session = Depends(get_db)):
     # Validate appointment date and time
     appointment_date = datetime.strptime(appointment.Ngay, "%Y-%m-%d")
     appointment_time = datetime.strptime(appointment.Gio, "%H:%M:%S").time()
@@ -61,6 +124,26 @@ def create_appointment(appointment: schemas.AppointmentCreate, db: Session = Dep
     db.add(db_appointment)
     db.commit()
     db.refresh(db_appointment)
+    
+    # Create medical record for this appointment
+    try:
+        medical_record = await create_medical_record(
+            appointment_id=db_appointment.MaLichHen,
+            patient_id=db_appointment.MaBenhNhan,
+            doctor_id=db_appointment.MaBacSi
+        )
+        
+        if medical_record:
+            print(f"Medical record created successfully for appointment {db_appointment.MaLichHen}")
+            print(f"Medical record ID: {medical_record.get('MaGiayKhamBenh', 'Unknown')}")
+        else:
+            print(f"Warning: Failed to create medical record for appointment {db_appointment.MaLichHen}")
+            # Note: We don't fail the appointment creation if medical record creation fails
+            
+    except Exception as e:
+        print(f"Error creating medical record for appointment {db_appointment.MaLichHen}: {str(e)}")
+        # Continue with appointment creation even if medical record fails
+    
     return db_appointment
 
 @router.get("/appointments", response_model=list[schemas.AppointmentResponse])
@@ -88,6 +171,7 @@ def get_appointment(appointment_id: int, db: Session = Depends(get_db)):
 
 @router.put("/appointments/{appointment_id}", response_model=schemas.AppointmentResponse)
 def update_appointment(appointment_id: int, appointment_update: schemas.AppointmentUpdate, db: Session = Depends(get_db)):
+    print(appointment_update)
     appointment = db.query(models.Appointment).filter(models.Appointment.MaLichHen == appointment_id).first()
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")

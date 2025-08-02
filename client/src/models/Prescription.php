@@ -125,4 +125,20 @@ class Prescription
         $headers = ['Authorization: Bearer ' . $token];
         return $this->callApi('/medicines/' . $medicineId, 'GET', null, $headers);
     }
+
+    public function createMedicine($medicineData)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token,
+            'Content-Type: application/json'
+        ];
+
+        return $this->callApi('/medicines', 'POST', $medicineData, $headers);
+    }
 }
