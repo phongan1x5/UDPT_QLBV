@@ -121,7 +121,7 @@ class Appointment
         $headers = ['Authorization: Bearer ' . $token];
 
         $data = ['TrangThai' => $status];
-        return $this->callApi('/appointments/' . $appointmentId . '/status', 'PUT', $data, $headers);
+        return $this->callApi('/appointments/' . $appointmentId, 'PUT', $data, $headers);
     }
 
     // Get appointment by ID
@@ -131,5 +131,95 @@ class Appointment
         $headers = ['Authorization: Bearer ' . $token];
 
         return $this->callApi('/appointments/' . $appointmentId, 'GET', null, $headers);
+    }
+
+    // Get all appointments for a specific doctor
+    public function getDoctorAppointments($doctorId)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        return $this->callApi('/appointments/doctor/' . $doctorId, 'GET', null, $headers);
+    }
+
+    // Get upcoming appointments for a specific doctor
+    public function getDoctorUpcomingAppointments($doctorId)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        // Get all doctor appointments and filter for upcoming ones
+        $response = $this->callApi('/appointments/doctor/' . $doctorId, 'GET', null, $headers);
+
+        if ($response['status'] === 200 && isset($response['data'])) {
+            $today = date('Y-m-d');
+            $upcomingAppointments = [];
+
+            // Handle double-wrapped response
+            $appointmentsData = $response['data'];
+            if (is_array($appointmentsData) && isset($appointmentsData[0]) && is_array($appointmentsData[0])) {
+                $appointmentsData = $appointmentsData[0];
+            }
+
+            foreach ($appointmentsData as $appointment) {
+                if ($appointment['Ngay'] >= $today) {
+                    $upcomingAppointments[] = $appointment;
+                }
+            }
+
+            return [
+                'status' => 200,
+                'data' => $upcomingAppointments
+            ];
+        }
+
+        return $response;
+    }
+
+    // Get appointment history for a specific doctor
+    public function getDoctorAppointmentHistory($doctorId, $skip = 0, $limit = 100)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        // Get all doctor appointments and filter for completed/past ones
+        $response = $this->callApi('/appointments/doctor/' . $doctorId, 'GET', null, $headers);
+
+        if ($response['status'] === 200 && isset($response['data'])) {
+            $today = date('Y-m-d');
+            $historyAppointments = [];
+
+            // Handle double-wrapped response
+            $appointmentsData = $response['data'];
+            if (is_array($appointmentsData) && isset($appointmentsData[0]) && is_array($appointmentsData[0])) {
+                $appointmentsData = $appointmentsData[0];
+            }
+
+            foreach ($appointmentsData as $appointment) {
+                // Include past appointments or completed appointments
+                if ($appointment['Ngay'] < $today || $appointment['TrangThai'] === 'HoanThanh') {
+                    $historyAppointments[] = $appointment;
+                }
+            }
+
+            // Sort by date (most recent first)
+            usort($historyAppointments, function ($a, $b) {
+                $dateCompare = strtotime($b['Ngay']) - strtotime($a['Ngay']);
+                if ($dateCompare === 0) {
+                    return strtotime($b['Gio']) - strtotime($a['Gio']);
+                }
+                return $dateCompare;
+            });
+
+            // Apply pagination
+            $historyAppointments = array_slice($historyAppointments, $skip, $limit);
+
+            return [
+                'status' => 200,
+                'data' => $historyAppointments
+            ];
+        }
+
+        return $response;
     }
 }

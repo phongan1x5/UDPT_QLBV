@@ -12,6 +12,9 @@ require_once 'src/controllers/MedicalRecordController.php';
 require_once 'src/controllers/LabController.php';
 require_once 'src/controllers/AppointmentController.php';
 require_once 'src/controllers/PharmacyController.php';
+require_once 'src/controllers/ConsultationController.php';
+require_once 'src/controllers/LookupController.php';
+
 // Simple routing
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
@@ -87,6 +90,13 @@ switch ($pathParts[0]) {
                 $controller->getAvailableSlots();
                 break;
             }
+            if ($pathParts[1] == 'confirm') {
+                if (isset($pathParts[2])) {
+                    $controller->doctorConfirmAppointment($pathParts[2]);
+                }
+
+                break;
+            }
             break;
         }
         $controller->index();
@@ -99,44 +109,57 @@ switch ($pathParts[0]) {
 
     case 'medicalRecords':
         $controller = new MedicalRecordController();
-        $controller->index();
-        break;
-
-    case 'labResults':
-        $controller = new LabController();
-        if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->updateUsedService();
-        } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->createService();
-        } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
-            $controller->addServiceForm();
-        } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-            $controller->searchService();
-        } else {
-            $controller->index();
+        if (isset($pathParts[1]) && $pathParts[1] === 'view-detail') {
+            if (isset($pathParts[2])) { //MaGiayKhamBenh
+                $controller->viewDetail(intval($pathParts[2]));
+            }
+            break;
+        }
+        if (isset($pathParts[1]) && $pathParts[1] === 'doctorRecents') {
+            $controller->doctorRecentMedicalRecord();
+            break;
+        }
+        if (isset($pathParts[1])) {
+            $controller->index($pathParts[1]);
         }
         break;
 
-    case 'lab':
-        $controller = new LabController();
-        if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->updateUsedService();
-        } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->createService();
-        } elseif (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->createUsedService();
-        } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
-            $controller->addServiceForm();
-        } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-            $controller->searchService();
-        } else if (isset($pathParts[2]) && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-            $controller->searchUsedServices();
-        } else if (isset($pathParts[1]) && $pathParts[1] === 'addusedservice') {
-            $controller->addUsedServiceForm();
-        } else {
-            $controller->index();
-        }
-        break;
+
+    // case 'labResults':
+    //     $controller = new LabController();
+    //     if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $controller->updateUsedService();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $controller->createService();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
+    //         $controller->addServiceForm();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    //         $controller->searchService();
+    //     } else {
+    //         $controller->index();
+    //     }
+    //     break;
+
+    // case 'lab':
+    //     $controller = new LabController();
+    //     if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $controller->updateUsedService();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $controller->createService();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $controller->createUsedService();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
+    //         $controller->addServiceForm();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    //         $controller->searchService();
+    //     } else if (isset($pathParts[2]) && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    //         $controller->searchUsedServices();
+    //     } else if (isset($pathParts[1]) && $pathParts[1] === 'addusedservice') {
+    //         $controller->addUsedServiceForm();
+    //     } else {
+    //         $controller->index();
+    //     }
+    //     break;
     case 'pharmacy':
         $controller = new PharmacyController();
         if (isset($pathParts[1]) && $pathParts[1] === 'medicine' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -151,6 +174,30 @@ switch ($pathParts[0]) {
             $controller->index();
         }
         break;
+
+    case 'consultation':
+        // /consultation/request-lab-service
+        $controller = new ConsultationController();
+        if (isset($pathParts[1]) && $pathParts[1] === 'request-lab-service') {
+            $controller->requestLabService();
+            break;
+        }
+        if (isset($pathParts[1]) && $pathParts[1] === 'submit-prescription') {
+            $controller->submitPrescription();
+            break;
+        }
+        if (isset($pathParts[1])) {
+            $controller->index(intval($pathParts[1]));
+        }
+        break;
+
+    case 'lookup':
+        $controller = new LookupController();
+        if (isset($pathParts[1]) && $pathParts[1] === 'patientMedicalHistory') {
+            $controller->lookupPatientMedicalHistory();
+            break;
+        }
+
     default:
         http_response_code(404);
         echo "Page not found - Path: " . $path;

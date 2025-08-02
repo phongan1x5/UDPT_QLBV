@@ -39,7 +39,7 @@ def create_prescription(prescription: schemas.ToaThuocCreate, db: Session = Depe
         # Create the prescription first
         db_prescription = models.ToaThuoc(
             MaGiayKhamBenh=prescription.MaGiayKhamBenh,
-            TrangThaiToaThuoc=prescription.TrangThaiToaThuoc
+            TrangThaiToaThuoc="Active"
         )
         db.add(db_prescription)
         db.commit()

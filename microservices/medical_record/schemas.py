@@ -26,6 +26,10 @@ class GiayKhamBenhBase(BaseModel):
 class GiayKhamBenhCreate(GiayKhamBenhBase):
     pass
 
+class GiayKhamBenhUpdate(BaseModel):
+    ChanDoan: str
+    LuuY: str
+
 class GiayKhamBenhResponse(GiayKhamBenhBase):
     MaGiayKhamBenh: int
 

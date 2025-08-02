@@ -43,6 +43,7 @@ def create_used_service(used_service: schemas.DichVuSuDungCreate, db: Session = 
         MaDichVu=used_service.MaDichVu,
         MaGiayKhamBenh=used_service.MaGiayKhamBenh,
         ThoiGian=used_service.ThoiGian,
+        YeuCauCuThe = used_service.YeuCauCuThe,
         KetQua=None,  # Initially no result
         FileKetQua=None  # Initially no file
     )
@@ -77,7 +78,7 @@ async def update_used_service(
     db.refresh(db_used_service)
 
     # Publish an event to RabbitMQ
-    publish_event("LabResultAvailable", f"UsedServiceID:{used_service_id}, Result:{KetQua}")
+    # publish_event("LabResultAvailable", f"UsedServiceID:{used_service_id}, Result:{KetQua}")
 
     return db_used_service
 

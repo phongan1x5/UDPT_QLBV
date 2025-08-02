@@ -16,6 +16,7 @@ class DichVuSuDung(Base):
     MaDVSD = Column(Integer, primary_key=True, index=True)  # Primary Key
     MaDichVu = Column(Integer, ForeignKey("DichVu.MaDichVu"), nullable=False)  # Foreign Key to DichVu
     MaGiayKhamBenh = Column(Integer, nullable=False)  # Foreign Key to medical record
+    YeuCauCuThe = Column(String, nullable=True)
     ThoiGian = Column(String, nullable=False)  # Time of service usage
     KetQua = Column(String, nullable=True)  # Result of the service
     FileKetQua = Column(String, nullable=True)  # File path or URL for the scan result

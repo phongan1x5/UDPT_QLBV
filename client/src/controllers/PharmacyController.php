@@ -34,7 +34,6 @@ class PharmacyController extends BaseController
     }
     private function staffPharmacys($user)
     {
-  
         // echo '<pre>';
         // print_r($allPharmacys);
         // echo '</pre>';
@@ -44,7 +43,7 @@ class PharmacyController extends BaseController
         $prescriptions = [];
 
         if ($response1['status'] === 200 && isset($response1['data'][0])) {
-            $prescriptions = $response1['data'][0]; 
+            $prescriptions = $response1['data'][0];
         }
         $response = $this->PharmacyModel->getAllMedicines();
 
@@ -126,28 +125,28 @@ class PharmacyController extends BaseController
         ]);
     }
 
-public function updateStatus()
-{
-    $this->requireLogin();
+    public function updateStatus()
+    {
+        $this->requireLogin();
 
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('pharmacy/staff');
+            return;
+        }
+
+        $pharmacyId = $_POST['MaToaThuoc'] ?? null;
+
+        $status = isset($_POST['TrangThai']) ? 'Đã phát' : 'Chưa phát';
+
+        if (!$pharmacyId) {
+            $this->redirect('pharmacy/staff');
+            return;
+        }
+
+        $result = $this->PharmacyModel->updatePrescriptionStatus($pharmacyId, $status);
+
         $this->redirect('pharmacy/staff');
-        return;
     }
-
-    $pharmacyId = $_POST['MaToaThuoc'] ?? null;
-
-    $status = isset($_POST['TrangThai']) ? 'Đã phát' : 'Chưa phát';
-
-    if (!$pharmacyId) {
-        $this->redirect('pharmacy/staff');
-        return;
-    }
-
-    $result = $this->PharmacyModel->updatePrescriptionStatus($pharmacyId, $status);
-
-    $this->redirect('pharmacy/staff');
-}
 
 
     public function medicines()
@@ -203,5 +202,4 @@ public function updateStatus()
             var_dump($response);
         }
     }
-
 }

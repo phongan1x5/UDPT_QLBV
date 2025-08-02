@@ -52,7 +52,7 @@ def create_staff(staff: schemas.StaffCreate, db: Session = Depends(get_db)):
     }
 
     # Make a request to the auth service to create the user
-    auth_service_url = "http://localhost:6000/auth/register"  # Replace with the actual auth service URL
+    auth_service_url = "http://api_gateway:6000/auth/register"  # Replace with the actual auth service URL
     try:
         response = requests.post(auth_service_url, json=auth_payload)
         response.raise_for_status()  # Raise an exception for HTTP errors

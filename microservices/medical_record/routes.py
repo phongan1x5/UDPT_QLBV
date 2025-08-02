@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 import models, schemas, database
 
 router = APIRouter()
@@ -43,6 +44,17 @@ def delete_medical_profile(profile_id: int, db: Session = Depends(get_db)):
     db.refresh(db_profile)
     return db_profile
 
+@router.get("/medical-profiles/{profile_id}")
+def get_medical_profile(profile_id: int, db: Session = Depends(get_db)):
+    # Get Medical Profile
+    profile = db.query(models.HoSoBenhAn).filter(models.HoSoBenhAn.MaHSBA == profile_id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Medical profile not found")
+
+    return {
+        "MedicalProfile": profile,
+    }
+
 # Create Medical Record - GiayKhamBenh
 @router.post("/medical-records", response_model=schemas.GiayKhamBenhResponse)
 def create_medical_record(record: schemas.GiayKhamBenhCreate, db: Session = Depends(get_db)):
@@ -52,9 +64,45 @@ def create_medical_record(record: schemas.GiayKhamBenhCreate, db: Session = Depe
     db.refresh(db_record)
     return db_record
 
+@router.get("/medical-record/byAppointmentId/{appointmentId}")
+def get_medical_record_by_appointmentId(appointmentId: int, db: Session = Depends(get_db)):
+    # Get Medical Profile
+    record = db.query(models.GiayKhamBenh).filter(models.GiayKhamBenh.MaLichHen == appointmentId).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Medical profile not found")
+
+    return {
+        "MedicalRecord": record,
+    }
+
+# This is for doctors to get their patient medical records.
+@router.get("/medical-record/byDoctorId/{doctorId}")
+def get_medical_record_by_doctorId(doctorId: int, db: Session = Depends(get_db)):
+    record = db.query(models.GiayKhamBenh).filter(and_(models.GiayKhamBenh.BacSi == doctorId,
+            models.GiayKhamBenh.ChanDoan != 'Pending examination'
+        )
+    ).all()
+    if not record:
+        raise HTTPException(status_code=404, detail="Medical profile not found")
+
+    return {
+        "MedicalRecord": record,
+    }
+
+@router.get("/medical-record/{record_id}")
+def get_medical_record(record_id: int, db: Session = Depends(get_db)):
+    # Get Medical Profile
+    record = db.query(models.GiayKhamBenh).filter(models.GiayKhamBenh.MaGiayKhamBenh == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Medical profile not found")
+
+    return {
+        "MedicalRecord": record,
+    }
+
 # Update Medical Record
 @router.put("/medical-records/{record_id}", response_model=schemas.GiayKhamBenhResponse)
-def update_medical_record(record_id: int, record: schemas.GiayKhamBenhCreate, db: Session = Depends(get_db)):
+def update_medical_record(record_id: int, record: schemas.GiayKhamBenhUpdate, db: Session = Depends(get_db)):
     db_record = db.query(models.GiayKhamBenh).filter(models.GiayKhamBenh.MaGiayKhamBenh == record_id).first()
     if not db_record:
         raise HTTPException(status_code=404, detail="Medical record not found")

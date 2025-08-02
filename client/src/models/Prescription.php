@@ -141,6 +141,4 @@ class Prescription
 
         return $this->callApi('/medicines', 'POST', $medicineData, $headers);
     }
-
-
 }

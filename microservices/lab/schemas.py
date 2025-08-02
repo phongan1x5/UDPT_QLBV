@@ -19,28 +19,22 @@ class DichVuSuDungBase(BaseModel):
     MaDichVu: int  # Service ID
     MaGiayKhamBenh: int  # Medical Record ID
     ThoiGian: str  # Time of service usage
+    YeuCauCuThe: str
     KetQua: Optional[str] = None  # Result of the service
     FileKetQua: Optional[str] = None  # File path or URL for the scan result
-
-class DichVuSuDungCreate(DichVuSuDungBase):
-    pass
-
-class DichVuSuDungResponse(DichVuSuDungBase):
-    MaDVSD: int  # Used Service ID
-
-    class Config:
-        orm_mode = True
 
 class DichVuSuDungCreate(BaseModel):
     MaDichVu: int
     MaGiayKhamBenh: int
     ThoiGian: str  # ISO format datetime string
+    YeuCauCuThe: str
 
 class DichVuSuDungResponse(BaseModel):
     MaDVSD: int
     MaDichVu: int
     MaGiayKhamBenh: int
     ThoiGian: str
+    YeuCauCuThe: str
     KetQua: Optional[str] = None
     FileKetQua: Optional[str] = None
 

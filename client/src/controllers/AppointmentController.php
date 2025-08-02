@@ -1,14 +1,17 @@
 <?php
 require_once __DIR__ . '/../models/Appointment.php';
+require_once __DIR__ . '/../models/MedicalRecord.php'; // Add this line
 require_once __DIR__ . '/../controllers/BaseController.php';
 
 class AppointmentController extends BaseController
 {
     private $appointmentModel;
+    private $medicalRecordModel; // Add this line
 
     public function __construct()
     {
         $this->appointmentModel = new Appointment();
+        $this->medicalRecordModel = new MedicalRecord(); // Add this line
     }
 
     public function index()
@@ -182,7 +185,30 @@ class AppointmentController extends BaseController
         $response = $this->appointmentModel->createAppointment($appointmentData);
 
         if ($response['status'] === 200 || $response['status'] === 201) {
-            $_SESSION['success'] = 'Appointment booked successfully! Please wait for confirmation.';
+            // Get the created appointment ID
+            $appointmentId = null;
+            if (isset($response['data']['MaLichHen'])) {
+                $appointmentId = $response['data']['MaLichHen'];
+            } elseif (isset($response['data'][0]['MaLichHen'])) {
+                $appointmentId = $response['data'][0]['MaLichHen'];
+            }
+
+            // Create medical record if appointment was created successfully
+            if ($appointmentId) {
+                $medicalRecordResult = $this->createMedicalRecord($appointmentId, $patientId, $doctorId, $date);
+
+                if ($medicalRecordResult['success']) {
+                    $_SESSION['success'] = 'Appointment booked successfully and medical record created! Please wait for confirmation.';
+                } else {
+                    // Appointment created but medical record failed
+                    $_SESSION['success'] = 'Appointment booked successfully! Medical record will be created during consultation.';
+                    error_log("Failed to create medical record for appointment {$appointmentId}: " . $medicalRecordResult['message']);
+                }
+            } else {
+                $_SESSION['success'] = 'Appointment booked successfully! Please wait for confirmation.';
+                error_log("Could not extract appointment ID from response");
+            }
+
             $this->redirect('appointments');
         } else {
             // Handle error response
@@ -198,6 +224,62 @@ class AppointmentController extends BaseController
 
             $_SESSION['error'] = $errorMessage;
             $this->redirect('appointments/book');
+        }
+    }
+
+    /**
+     * Create a medical record for the appointment
+     */
+    private function createMedicalRecord($appointmentId, $patientId, $doctorId, $appointmentDate)
+    {
+        try {
+            // First, get or verify the patient's medical profile (HoSoBenhAn)
+            $medicalProfileResponse = $this->medicalRecordModel->getMedicalProfileByPatient($patientId);
+
+            $medicalProfileId = null;
+
+            if ($medicalProfileResponse['status'] === 200 && isset($medicalProfileResponse['data']['MaHSBA'])) {
+                $medicalProfileId = $medicalProfileResponse['data']['MaHSBA'];
+            } else {
+                // If no medical profile exists, we might need to create one
+                // For now, we'll use the patient ID as a fallback
+                $medicalProfileId = $patientId;
+                error_log("Using patient ID {$patientId} as medical profile ID fallback");
+            }
+
+            // Prepare medical record data
+            $medicalRecordData = [
+                'MaHSBA' => $medicalProfileId,
+                'BacSi' => intval($doctorId),
+                'MaLichHen' => intval($appointmentId),
+                'NgayKham' => $appointmentDate,
+                'ChanDoan' => 'Pending examination', // Initial placeholder
+                'LuuY' => "Medical record created for appointment #{$appointmentId} on " . date('Y-m-d H:i:s')
+            ];
+
+            // Create the medical record
+            $response = $this->medicalRecordModel->createMedicalRecord($medicalRecordData);
+
+            if ($response['status'] === 200 || $response['status'] === 201) {
+                return [
+                    'success' => true,
+                    'message' => 'Medical record created successfully',
+                    'data' => $response['data']
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to create medical record: ' . ($response['message'] ?? 'Unknown error'),
+                    'data' => null
+                ];
+            }
+        } catch (Exception $e) {
+            error_log("Exception creating medical record: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Exception occurred: ' . $e->getMessage(),
+                'data' => null
+            ];
         }
     }
 
@@ -244,10 +326,19 @@ class AppointmentController extends BaseController
     private function doctorAppointments()
     {
         // TODO: Implement doctor view
-        $this->view('appointments/doctor', [
+        $this->render('appointments/doctor', [
             'user' => $_SESSION['user'],
             'message' => 'Doctor appointments view coming soon!'
         ]);
+    }
+
+    public function doctorConfirmAppointment($appointmentId)
+    {
+        $appointmentModel = new Appointment();
+        $newStatus = 'DaXacNhan';
+        $response = $appointmentModel->updateAppointmentStatus($appointmentId, $newStatus);
+        header('Content-Type: application/json');
+        echo json_encode($response);
     }
 
     private function adminAppointments()
@@ -260,7 +351,7 @@ class AppointmentController extends BaseController
             $appointments = $response['data'] ?? [];
         }
 
-        $this->view('appointments/admin', [
+        $this->render('appointments/admin', [
             'user' => $_SESSION['user'],
             'appointments' => $appointments
         ]);
