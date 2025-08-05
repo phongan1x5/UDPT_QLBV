@@ -1,5 +1,8 @@
 <?php
 require_once __DIR__ . '/../../helper/url_parsing.php';
+echo '<pre>';
+print_r($patient);
+echo '</pre>';
 ob_start();
 
 // Extract patient data from the response structure

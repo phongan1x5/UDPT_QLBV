@@ -113,7 +113,8 @@ async def create_appointment(appointment: schemas.AppointmentCreate, db: Session
     existing_appointment = db.query(models.Appointment).filter(
         models.Appointment.MaBacSi == appointment.MaBacSi,
         models.Appointment.Ngay == appointment.Ngay,
-        models.Appointment.Gio == appointment.Gio
+        models.Appointment.Gio == appointment.Gio,
+        models.Appointment.TrangThai.in_(["ChoXacNhan", "DaXacNhan", 'DaThuTien'])
     ).first()
 
     if existing_appointment:
@@ -149,6 +150,32 @@ async def create_appointment(appointment: schemas.AppointmentCreate, db: Session
 @router.get("/appointments", response_model=list[schemas.AppointmentResponse])
 def list_appointments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(models.Appointment).offset(skip).limit(limit).all()
+
+# Get verified appointments of a patient.
+@router.get("/appointments/patient/verified/{patient_id}", response_model=list[schemas.AppointmentResponse])
+def get_verified_appointments_for_patient(patient_id: int, db: Session = Depends(get_db)):
+    appointments = db.query(models.Appointment).filter(models.Appointment.MaBenhNhan == patient_id,
+        models.Appointment.TrangThai.in_(["DaXacNhan"])).all()
+    
+    if not appointments:
+        # You can choose to return empty list or raise an exception
+        # For better UX, returning empty list is usually better
+        return []
+    
+    return appointments
+
+# Get paid appointments of a patient.
+@router.get("/appointments/patient/paid/{patient_id}", response_model=list[schemas.AppointmentResponse])
+def get_paid_appointments_for_patient(patient_id: int, db: Session = Depends(get_db)):
+    appointments = db.query(models.Appointment).filter(models.Appointment.MaBenhNhan == patient_id,
+        models.Appointment.TrangThai.in_(["DaThuTien"])).all()
+    
+    if not appointments:
+        # You can choose to return empty list or raise an exception
+        # For better UX, returning empty list is usually better
+        return []
+    
+    return appointments
 
 @router.get("/appointments/patient/{patient_id}", response_model=list[schemas.AppointmentResponse])
 def get_appointments_for_patient(patient_id: int, db: Session = Depends(get_db)):

@@ -10,6 +10,7 @@ class LichHenType(str, enum.Enum):
 class TrangThaiType(str, enum.Enum):
     ChoXacNhan = "ChoXacNhan"
     DaXacNhan = "DaXacNhan"
+    DaThuTien = "DaThuTien"
     DaHuy = "DaHuy"
 
 class Appointment(Base):

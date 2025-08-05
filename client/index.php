@@ -14,6 +14,8 @@ require_once 'src/controllers/AppointmentController.php';
 require_once 'src/controllers/PharmacyController.php';
 require_once 'src/controllers/ConsultationController.php';
 require_once 'src/controllers/LookupController.php';
+require_once 'src/controllers/AdminController.php';
+require_once 'src/controllers/DeskStaffController.php';
 
 // Simple routing
 $request = $_SERVER['REQUEST_URI'];
@@ -83,6 +85,11 @@ switch ($pathParts[0]) {
         $controller = new AppointmentController();
         if (isset($pathParts[1])) {
             if ($pathParts[1] == 'book') {
+                if (isset($pathParts[2])) {
+                    //When a staff book for patient
+                    $controller->book($pathParts[2]);
+                    break;
+                }
                 $controller->book();
                 break;
             }
@@ -93,9 +100,20 @@ switch ($pathParts[0]) {
             if ($pathParts[1] == 'confirm') {
                 if (isset($pathParts[2])) {
                     $controller->doctorConfirmAppointment($pathParts[2]);
+                    break;
                 }
 
                 break;
+            }
+            if ($pathParts[1] == 'collectFees') {
+                if (isset($pathParts[2])) {
+                    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $controller->staffCollectAppointmentMoney($pathParts[2]);
+                        break;
+                    }
+                    $controller->collectAppointmentFeesPanel($pathParts[2]);
+                    break;
+                }
             }
             break;
         }
@@ -121,7 +139,9 @@ switch ($pathParts[0]) {
         }
         if (isset($pathParts[1])) {
             $controller->index($pathParts[1]);
+            break;
         }
+        $controller->index();
         break;
 
 
@@ -197,6 +217,35 @@ switch ($pathParts[0]) {
             $controller->lookupPatientMedicalHistory();
             break;
         }
+        if (isset($pathParts[1]) && $pathParts[1] === 'patientAppointmentFees') {
+            $controller->lookupPatientForAppointmentFees();
+            break;
+        }
+
+    case 'admin':
+        $controller = new AdminController();
+        if (isset($pathParts[1]) && $pathParts[1] === 'createStaff') {
+            $controller->createStaff();
+            break;
+        }
+        if (isset($pathParts[1]) && $pathParts[1] === 'submitCreateStaff') {
+            $controller->submitCreateStaff();
+            break;
+        }
+        break;
+
+    case 'deskStaff':
+        $controller = new DeskStaffController();
+        if (isset($pathParts[1]) && $pathParts[1] === 'createPatient') {
+            $controller->createPatient();
+            break;
+        }
+        if (isset($pathParts[1]) && $pathParts[1] === 'submitCreatePatient') {
+            $controller->submitCreatePatient();
+            break;
+        }
+        break;
+
 
     default:
         http_response_code(404);

@@ -5,8 +5,8 @@ class BaseController
 
     public function __construct()
     {
-        $database = new Database();
-        $this->db = $database->getConnection();
+        // $database = new Database();
+        // $this->db = $database->getConnection();
     }
 
     protected function render($view, $data = [])

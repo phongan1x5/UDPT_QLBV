@@ -45,12 +45,37 @@ def create_used_service(used_service: schemas.DichVuSuDungCreate, db: Session = 
         ThoiGian=used_service.ThoiGian,
         YeuCauCuThe = used_service.YeuCauCuThe,
         KetQua=None,  # Initially no result
-        FileKetQua=None  # Initially no file
+        FileKetQua=None,  # Initially no file
+        TrangThai="ChoThuTien" #Initially is not paid yet.
     )
     db.add(db_used_service)
     db.commit()
     db.refresh(db_used_service)
     return db_used_service
+
+# Paid for all service of a medical record
+@router.put("/used-services/paid_medical_record/{medicalRecordId}", response_model=list[schemas.DichVuSuDungResponse])
+async def paid_used_service_medical_record(
+    medicalRecordId: int,
+    db: Session = Depends(get_db)
+):
+    # Fetch all services with the given medical record ID
+    services = db.query(models.DichVuSuDung).filter(
+        models.DichVuSuDung.MaGiayKhamBenh == medicalRecordId
+    ).all()
+
+    # Update their status
+    for service in services:
+        service.TrangThai = "DaThuTien"
+
+    # Commit the changes
+    db.commit()
+
+    # Optionally refresh the instances if needed
+    for service in services:
+        db.refresh(service)
+
+    return services
 
 @router.put("/used-services/{used_service_id}", response_model=schemas.DichVuSuDungResponse)
 async def update_used_service(
@@ -127,3 +152,24 @@ def get_used_services_by_medical_record(medical_record_id: int, db: Session = De
         result.append(service_data)
     
     return result
+
+#Remove a DVSD
+@router.delete("/used-services/{used_service_id}", response_model=schemas.DichVuSuDungResponse)
+async def delete_used_service(
+    used_service_id: int,
+    db: Session = Depends(get_db)
+):
+    # Find the service by ID
+    service = db.query(models.DichVuSuDung).filter(
+        models.DichVuSuDung.MaDVSD == used_service_id
+    ).first()
+
+    # If not found, raise an error
+    if not service:
+        raise HTTPException(status_code=404, detail="Used service not found")
+
+    # Delete the service
+    db.delete(service)
+    db.commit()
+
+    return service

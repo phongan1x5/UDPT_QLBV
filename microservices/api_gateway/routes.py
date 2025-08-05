@@ -120,6 +120,16 @@ async def create_appointment(request: Request):
 async def list_appointments(request: Request, skip: int = 0, limit: int = 100):
     return await forward_request("GET", f"{MICROSERVICE_URLS['appointment']}/appointments?skip={skip}&limit={limit}", request=request)
 
+# Get verified appointments for a specific patient
+@router.get("/appointments/patient/verified/{patient_id}")
+async def get_verified_patient_appointments(patient_id: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['appointment']}/appointments/patient/verified/{patient_id}", request=request)
+
+# Get paid appointments for a specific patient
+@router.get("/appointments/patient/paid/{patient_id}")
+async def get_paid_patient_appointments(patient_id: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['appointment']}/appointments/patient/paid/{patient_id}", request=request)
+
 # Get appointments for a specific patient
 @router.get("/appointments/patient/{patient_id}")
 async def get_patient_appointments(patient_id: int, request: Request):
@@ -287,7 +297,7 @@ async def update_prescription_status(prescription_id: int, request: Request):
 @router.post("/medical-profiles")
 async def create_medical_profile(request: Request):
     data = await request.json()
-    return await forward_request("POST", f"{MICROSERVICE_URLS['medical_record']}/medical-profiles", data=data, request=request)
+    return await forward_request("POST", f"{MICROSERVICE_URLS['medical_record']}/medical-profiles", data=data, request=request, require_auth=False)
 
 @router.get("/medical-profiles")
 async def list_medical_profiles(request: Request, skip: int = 0, limit: int = 100):

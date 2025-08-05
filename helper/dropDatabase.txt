@@ -1,0 +1,7 @@
+DROP DATABASE IF EXISTS auth_service;
+DROP DATABASE IF EXISTS patient_service;
+DROP DATABASE IF EXISTS appointment_service;
+DROP DATABASE IF EXISTS lab_service;
+DROP DATABASE IF EXISTS pharmacy_service;
+DROP DATABASE IF EXISTS medical_record_service;
+DROP DATABASE IF EXISTS staff_service;

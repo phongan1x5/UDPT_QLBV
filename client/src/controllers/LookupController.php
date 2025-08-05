@@ -37,26 +37,42 @@ class LookupController extends BaseController
         $this->render('lookup/medicalHistory');
     }
 
-    private function viewPatientMedicalHistory($patientId)
+    public function lookupPatientForAppointmentFees()
     {
-        // Get patient data from the API
-        $patientModel = new Patient();
-        $patientData = $patientModel->getPatientById($patientId);
+        $this->requireLogin();
+        $user = $_SESSION['user'] ?? null;
 
-        $medicalHistory = [];
-
-        if ($patientData && $patientData['status'] === 200 && isset($patientData['data'][0])) {
-            $patientId = $patientData['data'][0]['id'];
-
-            // Use the MedicalRecord model to get medical history
-            $medicalRecordModel = new MedicalRecord();
-            $medicalHistory = $medicalRecordModel->getMedicalHistory($patientId);
+        if (!$user) {
+            $this->redirect('login');
+            return;
         }
 
-        // Render the patient dashboard with all data
-        $this->render('medicalRecords/doctor', [
-            'patient' => $patientData,
-            'medicalHistory' => $medicalHistory
-        ]);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $input = $_POST['input'] ?? null;
+            $patientModel = new Patient();
+            $patient = $patientModel->getPatientByPhone($input);
+            error_log("Patient data find by phone");
+            error_log(print_r($patient, true));
+            if ($patient['status'] !== 200) {
+                // If not found by phone then try by patientId
+                $patient = $patientModel->getPatientById(intval($input));
+                error_log("Patient data find by id");
+                error_log(print_r($patient, true));
+
+                if ($patient['status'] !== 200) {
+                    $_SESSION['lookup_error'] = 'Wrong patient id';
+                    $this->redirect('lookup/patientAppointmentFees');
+                    //Wrong again, then no patient found
+                }
+                $patientId = $patient['data'][0]['id'];
+                $this->redirect('appointments/collectFees/' . $patientId);
+                return;
+            }
+            $patientId = $patient['data'][0]['id'];
+            $this->redirect('appointments/collectFees/' . $patientId);
+            return;
+        }
+
+        $this->render('lookup/patientAppointmentFees');
     }
 }

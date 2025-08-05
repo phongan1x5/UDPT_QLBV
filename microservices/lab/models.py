@@ -20,6 +20,7 @@ class DichVuSuDung(Base):
     ThoiGian = Column(String, nullable=False)  # Time of service usage
     KetQua = Column(String, nullable=True)  # Result of the service
     FileKetQua = Column(String, nullable=True)  # File path or URL for the scan result
+    TrangThai = Column(String, nullable=False)
 
     # Relationships
     # DichVu = relationship("DichVu", back_populates="DichVuSuDung")

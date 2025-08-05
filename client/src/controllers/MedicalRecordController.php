@@ -90,7 +90,7 @@ class MedicalRecordController extends BaseController
 
         // Render the patient dashboard with all data
         $this->render('medicalRecords/doctor', [
-            'patient' => $patientData,
+            'patient' => $patientData['data'][0],
             'medicalHistory' => $medicalHistory
         ]);
     }
@@ -133,9 +133,9 @@ class MedicalRecordController extends BaseController
                 // TODO: Implement doctor dashboard
                 $this->doctorViewMedicalHistory($patientId);
                 break;
-            case 'admin':
+            case 'desk_staff':
                 // TODO: Implement admin dashboard
-                $this->render('dashboard', ['user' => $user]);
+                $this->doctorViewMedicalHistory($patientId);
                 break;
             default:
                 $this->render('dashboard', ['user' => $user]);

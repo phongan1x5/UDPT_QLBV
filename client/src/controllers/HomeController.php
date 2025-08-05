@@ -4,7 +4,6 @@ require_once __DIR__ . '/../models/Patient.php';
 require_once __DIR__ . '/../models/Staff.php';
 require_once __DIR__ . '/../models/Appointment.php';
 require_once __DIR__ . '/../models/MedicalRecord.php';
-require_once __DIR__ . '/../models/Lab.php';
 
 class HomeController extends BaseController
 {
@@ -83,6 +82,28 @@ class HomeController extends BaseController
         ]);
     }
 
+    private function adminDashboard($user)
+    {
+        $staffModel = new Staff();
+        $admin = $staffModel->getStaffById($user['user_id']);
+
+        $this->render('dashboard/admin', [
+            'user' => $user,
+            'admin' => $admin['data'][0]
+        ]);
+    }
+
+    private function deskStaffDashboard($user)
+    {
+        $staffModel = new Staff();
+        $staff = $staffModel->getStaffById($user['user_id']);
+
+        $this->render('dashboard/deskStaff', [
+            'user' => $user,
+            'staff' => $staff['data'][0]
+        ]);
+    }
+
     public function dashboard()
     {
         $this->requireLogin();
@@ -106,8 +127,10 @@ class HomeController extends BaseController
                 break;
             case 'admin':
                 // TODO: Implement admin dashboard
-                $this->render('dashboard', ['user' => $user]);
+                $this->adminDashboard($user);
                 break;
+            case 'desk_staff':
+                $this->deskStaffDashboard($user);
             default:
                 $this->render('dashboard', ['user' => $user]);
                 break;

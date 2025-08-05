@@ -41,9 +41,12 @@ class AppointmentController extends BaseController
         }
     }
 
-    private function patientAppointments()
+    private function patientAppointments($patientId = "")
     {
         $user = $_SESSION['user'];
+
+        //Meaning that this is a patient
+        if ($patientId == "") $patientId = $this->extractPatientId($user['user_id']);
         $patientId = $this->extractPatientId($user['user_id']);
 
         if (!$patientId) {
@@ -73,17 +76,18 @@ class AppointmentController extends BaseController
         ]);
     }
 
-    public function book()
+    public function book($patientId = "")
     {
         $this->requireLogin();
         $user = $_SESSION['user'] ?? null;
 
-        if (!$user || $user['user_role'] !== 'patient') {
+        if (!$user) {
             $this->redirect('appointments');
             return;
         }
 
-        $patientId = $this->extractPatientId($user['user_id']);
+        //Meaning that patient book for themselves.
+        if ($patientId == "") $patientId = $this->extractPatientId($user['user_id']);
 
         if (!$patientId) {
             $this->redirect('dashboard');
@@ -302,26 +306,15 @@ class AppointmentController extends BaseController
         echo json_encode($response);
     }
 
-    public function cancel($appointmentId)
+    public function cancelAppointment($appointmentId)
     {
-        $this->requireLogin();
-        $user = $_SESSION['user'] ?? null;
-
-        if (!$user || $user['user_role'] !== 'patient') {
-            $this->redirect('appointments');
-            return;
-        }
-
-        $response = $this->appointmentModel->cancelAppointment($appointmentId);
-
-        if ($response['status'] === 200) {
-            $_SESSION['success'] = 'Appointment cancelled successfully.';
-        } else {
-            $_SESSION['error'] = 'Failed to cancel appointment.';
-        }
-
-        $this->redirect('appointments');
+        $appointmentModel = new Appointment();
+        $newStatus = 'DaHuy';
+        $response = $appointmentModel->updateAppointmentStatus($appointmentId, $newStatus);
+        header('Content-Type: application/json');
+        echo json_encode($response);
     }
+
 
     private function doctorAppointments()
     {
@@ -371,5 +364,33 @@ class AppointmentController extends BaseController
 
         // If no pattern matches, return null
         return null;
+    }
+
+    public function collectAppointmentFeesPanel($patientId)
+    {
+        $user = $_SESSION['user'];
+        $appointmentModel = new Appointment();
+        $appointments = $appointmentModel->getPatientVerifiedAppointments($patientId);
+        $paid_appointments = $appointmentModel->getPatientPaidAppointments($patientId);
+        // error_log(print_r($appointments), true);
+        $this->render('appointments/collectAppointmentFeesPanel', [
+            "user" => $user,
+            "appointments" => $appointments['data'][0],
+            "paid_appointments" => $paid_appointments['data'][0]
+        ]);
+    }
+
+    public function staffCollectAppointmentMoney($appointmentId)
+    {
+        $appointmentModel = new Appointment();
+        $newStatus = 'DaThuTien';
+        $response = $appointmentModel->updateAppointmentStatus($appointmentId, $newStatus);
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function appointmentsToCollectFees($patientId)
+    {
+        //Show appointments that need to collect fees for a patient, currentState is "DaXacNhan"
     }
 }

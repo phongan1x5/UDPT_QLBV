@@ -7,7 +7,7 @@ class Staff(Base):
     __tablename__ = "NhanVien"  # Table name matches the ERD
 
     MaNhanVien = Column(Integer, primary_key=True, index=True)  # Primary Key
-    IDPhongBan = Column(Integer, ForeignKey("PhongBan.IDPhongBan"), nullable=False)  # Foreign Key to PhongBan
+    IDPhongBan = Column(Integer, nullable=True)  # Foreign Key to PhongBan
     HoTen = Column(String, nullable=False)  # Full Name
     NgaySinh = Column(String, nullable=False)  # Date of Birth
     DiaChi = Column(String, nullable=False)  # Address

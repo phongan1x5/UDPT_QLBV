@@ -91,6 +91,29 @@ class Patient
         return $response;
     }
 
+    public function getPatientByPhone($patientPhone)
+    {
+        // Get user token from session for authentication
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        // Add Authorization header
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        // Call the API Gateway route: GET /patients/{patient_id}
+        $response = $this->callApi('/patients/by_phone/' . $patientPhone, 'GET', null, $headers);
+
+        return $response;
+    }
+
     // Method to get current user's patient record
     public function getCurrentPatient()
     {

@@ -89,6 +89,25 @@ class Appointment
         return $this->callApi('/appointments/patient/' . $patientId, 'GET', null, $headers);
     }
 
+
+    public function getPatientVerifiedAppointments($patientId)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        return $this->callApi('/appointments/patient/verified/' . $patientId, 'GET', null, $headers);
+    }
+
+    //get appointments that have already being paid by patient
+    public function getPatientPaidAppointments($patientId)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        $headers = ['Authorization: Bearer ' . $token];
+
+        return $this->callApi('/appointments/patient/paid/' . $patientId, 'GET', null, $headers);
+    }
+
+
     public function getPatientUpcomingAppointments($patientId)
     {
         $token = $_SESSION['user']['token'] ?? null;

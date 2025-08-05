@@ -161,9 +161,6 @@ echo '</pre>';
                             <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No Appointments Found</h5>
                             <p class="text-muted">You don't have any appointments scheduled yet.</p>
-                            <a href="/appointments/book" class="btn btn-primary">
-                                <i class="fas fa-calendar-plus"></i> Book Your First Appointment
-                            </a>
                         </div>
                     <?php endif; ?>
                 </div>

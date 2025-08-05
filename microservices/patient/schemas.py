@@ -15,6 +15,7 @@ class PatientBase(BaseModel):
 
 class PatientCreate(PatientBase):
     Password: str
+    TienSu: str
 
 class PatientUpdate(BaseModel):
     HoTen: Optional[str] = None

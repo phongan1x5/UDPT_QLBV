@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 echo '<pre>';
 print_r($doctors[0]);
+print_r("patientId: " . $patientId);
 echo '</pre>';
 ?>
 
@@ -34,7 +35,9 @@ echo '</pre>';
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Appointment Details</h5>
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Appointment Details: Booking for Patient:
+                        <?php echo htmlspecialchars("BN" . $patientId); ?>
+                    </h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="<?php echo url('appointments/book'); ?>" id="bookingForm">

@@ -22,12 +22,14 @@ class DichVuSuDungBase(BaseModel):
     YeuCauCuThe: str
     KetQua: Optional[str] = None  # Result of the service
     FileKetQua: Optional[str] = None  # File path or URL for the scan result
+    TrangThai: str
 
 class DichVuSuDungCreate(BaseModel):
     MaDichVu: int
     MaGiayKhamBenh: int
     ThoiGian: str  # ISO format datetime string
     YeuCauCuThe: str
+    TrangThai: str
 
 class DichVuSuDungResponse(BaseModel):
     MaDVSD: int
@@ -37,6 +39,7 @@ class DichVuSuDungResponse(BaseModel):
     YeuCauCuThe: str
     KetQua: Optional[str] = None
     FileKetQua: Optional[str] = None
+    TrangThai: str
 
     class Config:
         from_attributes = True

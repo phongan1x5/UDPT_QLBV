@@ -58,7 +58,7 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                     if ($appointments && $appointments['status'] === 200 && isset($appointments['data'][0]) && is_array($appointments['data'][0])) {
                         foreach ($appointments['data'][0] as $appointment) {
                             // Filter appointments that are pending confirmation for this doctor
-                            if ($appointment['TrangThai'] === 'ChoXacNhan' && $appointment['MaBacSi'] == $doctorData['MaNhanVien']) {
+                            if (($appointment['TrangThai'] === 'ChoXacNhan') && $appointment['MaBacSi'] == $doctorData['MaNhanVien']) {
                                 $pendingConfirmations[] = $appointment;
                             }
                         }
@@ -298,7 +298,7 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                                                     <button class="btn btn-outline-primary btn-sm" title="View Patient">
                                                         <i class="fas fa-user"></i>
                                                     </button>
-                                                    <?php if ($appointment['TrangThai'] === 'DaXacNhan'): ?>
+                                                    <?php if ($appointment['TrangThai'] === 'DaThuTien'): ?>
                                                         <a href="<?php echo url('consultation/' . $appointment['MaLichHen']); ?>" class="btn btn-outline-primary btn-sm">
                                                             <i class="fa-solid fa-stethoscope"></i> Start Consulting
                                                         </a>
@@ -385,11 +385,11 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                                             </p>
                                         </div>
 
-                                        <span class="badge bg-<?php echo $appointment['TrangThai'] === 'XacNhan' ? 'success' : 'warning'; ?>">
-                                            <?php echo $appointment['TrangThai'] === 'XacNhan' ? 'Confirmed' : 'Pending'; ?>
+                                        <span class="badge bg-<?php echo $appointment['TrangThai'] === 'DaXacNhan' ? 'success' : 'warning'; ?>">
+                                            <?php echo $appointment['TrangThai'] === 'DaXacNhan' ? 'Confirmed' : 'Pending'; ?>
 
                                         </span>
-                                        <?php if ($appointment['TrangThai'] === 'DaXacNhan'): ?>
+                                        <?php if ($appointment['TrangThai'] === 'DaThuTien'): ?>
                                             <a href="<?php echo url('consultation/' . $appointment['MaLichHen']); ?>" class="btn btn-outline-primary btn-sm">
                                                 <i class="fa-solid fa-stethoscope"></i> Start Consulting
                                             </a>
@@ -475,12 +475,16 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary">
+                        <!-- <button class="btn btn-primary">
                             <i class="fas fa-calendar-check"></i> View My Schedule
-                        </button>
+                        </button> -->
 
-                        <a href="<?php echo url('lookup/patientMedicalHistory'); ?>" class="btn btn-outline-success">
-                            <i class="fas fa-user-plus"></i> Patient Lookup
+                        <a href="<?php echo url('lookup/patientMedicalHistory'); ?>" class="btn btn-success"">
+                            <i class=" fas fa-user-plus"></i> Patient Lookup
+                        </a>
+
+                        <a href="<?php echo url('medicalRecords/doctorRecent'); ?>" class="btn btn-info">
+                            <i class="fa-solid fa-file"></i> Recent Medical Record
                         </a>
 
                         <!-- <button class="btn btn-outline-info">

@@ -12,6 +12,22 @@ class Staff
             return $matches[1]; // Returns just the number part
         }
 
+        if (preg_match('/^DS(\d+)$/', $userAuthId, $matches)) {
+            return $matches[1]; // Returns just the number part
+        }
+
+        if (preg_match('/^LS(\d+)$/', $userAuthId, $matches)) {
+            return $matches[1]; // Returns just the number part
+        }
+
+        if (preg_match('/^PH(\d+)$/', $userAuthId, $matches)) {
+            return $matches[1]; // Returns just the number part
+        }
+
+        if (preg_match('/^AD(\d+)$/', $userAuthId, $matches)) {
+            return $matches[1]; // Returns just the number part
+        }
+
         // If it's already numeric, return as is
         if (is_numeric($userAuthId)) {
             return $userAuthId;
@@ -89,5 +105,42 @@ class Staff
         $response = $this->callApi('/staff/' . $staffId, 'GET', null, $headers);
 
         return $response;
+    }
+
+    public function createStaff($staffData)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        return $this->callApi('/staff', 'POST', $staffData, $headers);
+    }
+
+
+    public function createDepartment($departmentData)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        return $this->callApi('/department', 'POST', $departmentData, $headers);
     }
 }

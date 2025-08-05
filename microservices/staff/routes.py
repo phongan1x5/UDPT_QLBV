@@ -33,6 +33,7 @@ def create_staff(staff: schemas.StaffCreate, db: Session = Depends(get_db)):
         "doctor": "DR",
         "desk_staff": "DS",
         "lab_staff": "LS",
+        "nurse": "NS",
         "pharmacist": "PH",
         "admin": "AD"
     }

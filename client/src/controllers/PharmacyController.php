@@ -34,6 +34,7 @@ class PharmacyController extends BaseController
     }
     private function staffPharmacys($user)
     {
+
         // echo '<pre>';
         // print_r($allPharmacys);
         // echo '</pre>';

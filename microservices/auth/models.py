@@ -5,7 +5,8 @@ import enum
 class UserRole(str, enum.Enum):
     patient = "patient"
     doctor = "doctor"
-    desk_staff = "staff"
+    desk_staff = "desk_staff"
+    nurse = "nurse"
     lab_staff = "lab_staff"
     pharmacist = "pharmacist"
     admin = "admin"
