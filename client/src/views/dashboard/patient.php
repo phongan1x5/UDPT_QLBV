@@ -296,7 +296,7 @@ echo '</pre>';
                         <a href="<?php echo url('prescriptions'); ?>" class="btn btn-outline-success">
                             <i class="fas fa-pills"></i> My Prescriptions
                         </a>
-                        <a href="<?php echo url('labResults'); ?>" class="btn btn-outline-warning">
+                        <a href="<?php echo url('lab'); ?>" class="btn btn-outline-warning">
                             <i class="fas fa-flask"></i> Lab Results
                         </a>
                     </div>

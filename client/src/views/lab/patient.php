@@ -1,10 +1,5 @@
 <?php
 ob_start();
-
-// Debug section (remove this once it's working)
-// echo '<pre>';
-// print_r($labServices);
-// echo '</pre>';
 ?>
 
 <div class="container-fluid">
@@ -54,17 +49,32 @@ ob_start();
                                                 </span>
                                             </div>
 
-                                            <?php if ($serviceInfo): ?>
-                                                <div class="mb-3">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-info-circle"></i>
-                                                        <strong>Service:</strong> <?php echo htmlspecialchars($serviceInfo['NoiDungDichVu']); ?>
-                                                        <br>
-                                                        <i class="fas fa-dollar-sign"></i>
-                                                        <strong>Cost:</strong> $<?php echo number_format($serviceInfo['DonGia'], 2); ?>
-                                                    </small>
-                                                </div>
-                                            <?php endif; ?>
+<?php if ($serviceInfo): ?>
+    <div class="mb-3">
+        <small class="text-muted">
+            <i class="fas fa-info-circle"></i>
+            <strong>Service:</strong> <?php echo htmlspecialchars($serviceInfo['NoiDungDichVu']); ?>
+            <br>
+            <i class="fas fa-dollar-sign"></i>
+            <strong>Cost:</strong> $<?php echo number_format($serviceInfo['DonGia'], 2); ?>
+            <br>
+            <i class="fas fa-receipt"></i>
+            <strong>Paid Status:</strong>
+            <?php
+              $status = strtolower($labService['TrangThai'] ?? 'unknown');
+              $statusBadge = [
+                  'paid' => 'success',
+                  'unpaid' => 'danger',
+                  'pending' => 'warning'
+              ][$status] ?? 'secondary';
+            ?>
+            <span class="badge bg-<?= $statusBadge ?>">
+              <?= ucfirst($status) ?>
+            </span>
+        </small>
+    </div>
+<?php endif; ?>
+
 
                                             <div class="mb-3">
                                                 <small class="text-muted">

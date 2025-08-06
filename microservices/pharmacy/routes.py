@@ -21,6 +21,19 @@ def create_medicine(medicine: schemas.ThuocCreate, db: Session = Depends(get_db)
     db.refresh(db_medicine)
     return db_medicine
 
+@router.put("/medicines/{medicine_id}")
+def update_medicine(medicine_id: int, medicine: schemas.ThuocUpdate, db: Session = Depends(get_db)):    
+    db_medicine = db.query(models.Thuoc).filter(models.Thuoc.MaThuoc == medicine_id).first()
+    if not db_medicine:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+    
+    for key, value in medicine.dict().items():
+        setattr(db_medicine, key, value)
+    
+    db.commit()
+    db.refresh(db_medicine)
+    return db_medicine
+
 @router.get("/medicines", response_model=List[schemas.ThuocResponse])
 def list_medicines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(models.Thuoc).offset(skip).limit(limit).all()

@@ -31,7 +31,7 @@
 
         <div class="text-end">
             <button type="submit" class="btn btn-success">💾 Add Medicine</button>
-            <a href="/prescriptions/staff" class="btn btn-secondary">Cancel</a>
+            <a href="/prescriptions/staff#medicines-panel" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>

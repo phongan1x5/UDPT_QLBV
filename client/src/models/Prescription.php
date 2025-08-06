@@ -141,4 +141,20 @@ class Prescription
 
         return $this->callApi('/medicines', 'POST', $medicineData, $headers);
     }
+
+    public function updateMedicine($medicineId, $medicineData)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token,
+            'Content-Type: application/json'
+        ];
+
+        return $this->callApi('/medicines/' . $medicineId, 'PUT', $medicineData, $headers);
+    }
 }

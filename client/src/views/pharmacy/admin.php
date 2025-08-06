@@ -1,7 +1,7 @@
 <?php ob_start(); ?>
 
 <div class="container mt-4">
-    <h2><i class="fas fa-file-medical"></i> Staff Pharmacy</h2>
+    <h2><i class="fas fa-file-medical"></i> Admin pharmacy</h2>
 
     <!-- Tabs -->
     <ul class="nav nav-tabs mt-4" id="prescriptionTab" role="tablist">
@@ -13,38 +13,16 @@
         </li>
     </ul>
 
-
     <div class="tab-content mt-3">
         <!-- Prescriptions -->
         <div class="tab-pane fade show active" id="prescriptions-panel" role="tabpanel">
             <?php if (!empty($prescriptions)): ?>
-            <?php
-                $totalPrescriptions = count($prescriptions);
-                $dispensedCount = 0;
-                foreach ($prescriptions as $p) {
-                    if ($p['TrangThaiToaThuoc'] === 'Đã phát') {
-                        $dispensedCount++;
-                    }
-                }
-                $pendingCount = $totalPrescriptions - $dispensedCount;
-            ?>
-
-                <div class="alert alert-primary d-flex justify-content-between align-items-center">
-                    <div>
-                         Tổng đơn: <strong><?= $totalPrescriptions ?></strong> |
-                         Đã phát: <strong class="text-success"><?= $dispensedCount ?></strong> |
-                         Chờ phát: <strong class="text-warning"><?= $pendingCount ?></strong>
-                    </div>
-                </div>
-
-
                 <table class="table table-bordered align-middle">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Medical Record</th>
                             <th>Status</th>
-                            <th>Update</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,24 +35,6 @@
                                         <?= htmlspecialchars($p['TrangThaiToaThuoc']) ?>
                                     </span>
                                 </td>
-                                <td>
-                                    <form method="POST" action="/pharmacy/update-status" class="d-flex align-items-center gap-2">
-                                        <input type="hidden" name="MaToaThuoc" value="<?= $p['MaToaThuoc'] ?>">
-
-                                        <div class="form-check form-switch m-0">
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                                role="switch"
-                                                id="toggleStatus<?= $p['MaToaThuoc'] ?>"
-                                                name="TrangThai"
-                                                value="Đã phát"
-                                                <?= $p['TrangThaiToaThuoc'] === 'Đã phát' ? 'checked' : '' ?>>
-                                        </div>
-
-                                        <button class="btn btn-sm btn-outline-primary">💾</button>
-                                    </form>
-                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -84,13 +44,8 @@
             <?php endif; ?>
         </div>
 
-
         <!-- Medicines -->
         <div class="tab-pane fade" id="medicines-panel" role="tabpanel">
-            <div class="d-flex justify-content-end mb-3">
-                <a href="/pharmacy/addmedicine" class="btn btn-success">➕ Add Medicine</a>
-            </div>
-
             <?php if (!empty($medicines)): ?>
                 <table class="table table-bordered">
                     <thead>
@@ -101,7 +56,6 @@
                             <th>ChiDinh</th>
                             <th>TonKho</th>
                             <th>GiaTien</th>
-                            <th>Update</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -113,15 +67,8 @@
                                 <td><?= htmlspecialchars($med['ChiDinh']) ?></td>
                                 <td><?= $med['SoLuongTonKho'] ?></td>
                                 <td><?= number_format($med['GiaTien'], 0, ',', '.') ?> VND</td>
-                                    <td>
-                                    <a href="/pharmacy/updatemedicine?MaThuoc=<?= urlencode($med['MaThuoc']) ?>" class="btn btn-sm btn-outline-secondary">
-                                        ✏️ Edit
-                                    </a>
-                                </td>
-
                             </tr>
                         <?php endforeach; ?>
-
                     </tbody>
                 </table>
             <?php else: ?>
@@ -133,6 +80,6 @@
 
 <?php
 $content = ob_get_clean();
-$title = 'Staff Pharmacy';
+$title = 'Admin pharmacy';
 include __DIR__ . '/../layouts/main.php';
 ?>

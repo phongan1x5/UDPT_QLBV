@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 import os
 import models, schemas, database
 from rabbitmq import publish_event
-
-
+from fastapi.responses import FileResponse
 router = APIRouter()
 
 def get_db():
@@ -117,6 +116,16 @@ def get_used_service(used_service_id: int, db: Session = Depends(get_db)):
     if not used_service:
         raise HTTPException(status_code=404, detail="Used service not found")
     return used_service
+
+@router.get("/used-services/results/{filename}")
+def secure_file(filename: str):
+    print("UPLOAD_DIR =", UPLOAD_DIR)
+
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(404, "Not found")
+    # insert auth check here if needed
+    return FileResponse(file_path, media_type="application/pdf")
 
 @router.get("/used-services/medical-record/{medical_record_id}")
 def get_used_services_by_medical_record(medical_record_id: int, db: Session = Depends(get_db)):

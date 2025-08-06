@@ -25,8 +25,14 @@ class PharmacyController extends BaseController
 
         // Handle different roles
         switch ($user['user_role']) {
-            case 'patient':
+            case 'staff':
                 $this->staffPharmacys($user);
+                break;
+            case 'doctor':
+                $this->doctorPharmacys($user);
+                break;
+            case 'admin':
+                $this->adminPharmacys($user);   
                 break;
             default:
                 $this->redirect('dashboard');
@@ -34,7 +40,7 @@ class PharmacyController extends BaseController
     }
     private function staffPharmacys($user)
     {
-
+  
         // echo '<pre>';
         // print_r($allPharmacys);
         // echo '</pre>';
@@ -42,7 +48,7 @@ class PharmacyController extends BaseController
         $response1 = $this->PharmacyModel->getAllPrescriptions(); // or getPrescriptionById(), etc.
 
         $prescriptions = [];
-
+        
         if ($response1['status'] === 200 && isset($response1['data'][0])) {
             $prescriptions = $response1['data'][0];
         }
@@ -61,23 +67,47 @@ class PharmacyController extends BaseController
     }
     private function doctorPharmacys($user)
     {
-        // TODO: Implement doctor Pharmacys view
-        $this->render('Pharmacys/doctor', [
+        $response1 = $this->PharmacyModel->getAllPrescriptions(); 
+
+        $prescriptions = [];
+        
+        if ($response1['status'] === 200 && isset($response1['data'][0])) {
+            $prescriptions = $response1['data'][0];
+        }
+        $response = $this->PharmacyModel->getAllMedicines();
+
+        $medicines = [];
+        if ($response['status'] === 200 && isset($response['data'][0])) {
+            $medicines = $response['data'][0];
+        }
+
+        $this->render('pharmacy/doctor', [
             'user' => $user,
-            'message' => 'Doctor Pharmacys view coming soon!'
+            'prescriptions' => $prescriptions,
+            'medicines' => $medicines
         ]);
     }
 
     private function adminPharmacys($user)
     {
-        // Get all Pharmacys for admin
-        $allPharmacys = $this->PharmacyModel->getAllPrescriptions();
-        $allMedicines = $this->PharmacyModel->getAllMedicines();
+        $response1 = $this->PharmacyModel->getAllPrescriptions(); 
 
-        $this->render('Pharmacys/admin', [
+        $prescriptions = [];
+        
+        if ($response1['status'] === 200 && isset($response1['data'][0])) {
+            $prescriptions = $response1['data'][0];
+        }
+        $response = $this->PharmacyModel->getAllMedicines();
+
+        $medicines = [];
+        if ($response['status'] === 200 && isset($response['data'][0])) {
+            $medicines = $response['data'][0];
+        }
+
+        $this->render('pharmacy/doctor', [
             'user' => $user,
-            'Pharmacys' => $allPharmacys,
-            'medicines' => $allMedicines
+            'prescriptions' => $prescriptions,
+            'medicines' => $medicines
         ]);
     }
 
@@ -183,6 +213,7 @@ class PharmacyController extends BaseController
             'user' => $user
         ]);
     }
+
     public function addMedicine()
     {
         $medicineData = [
@@ -202,5 +233,26 @@ class PharmacyController extends BaseController
             echo "Failed to create medicine.";
             var_dump($response);
         }
+    }
+
+    public function updateMedicineForm()
+    {
+
+        $medicineId = $_POST['id'] ?? null;
+        $medicine = $this->PharmacyModel->getMedicineById($medicineId);
+
+        if (!$medicine || $medicine['status'] !== 200) {
+            $this->redirect('pharmacy/medicines');
+            return;
+        }
+
+        $this->render('pharmacy/updatemedicine', [
+            'medicine' => $medicine['data'][0]
+        ]);
+    }
+
+    public function updateMedicine()
+    {
+        $this->redirect('pharmacy/staff');
     }
 }
