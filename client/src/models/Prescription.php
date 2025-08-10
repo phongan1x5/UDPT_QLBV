@@ -154,7 +154,11 @@ class Prescription
         return $this->callApi('/medicines', 'POST', $medicineData, $headers);
     }
 
-    public function getReport($year)
+    public function getReport($year){
+          return $this->callApi('/reports/prescriptions-by-year/' . $year, 'GET', null, $headers);
+    }
+    public function updateMedicine($medicineId, $medicineData)
+
     {
         $token = $_SESSION['user']['token'] ?? null;
 
@@ -167,6 +171,8 @@ class Prescription
             'Content-Type: application/json'
         ];
 
-        return $this->callApi('/reports/prescriptions-by-year/' . $year, 'GET', null, $headers);
+
+        return $this->callApi('/medicines/' . $medicineId, 'PUT', $medicineData, $headers);
+
     }
 }

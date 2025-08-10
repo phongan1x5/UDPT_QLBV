@@ -26,8 +26,8 @@ class LabController extends BaseController
 
         // Handle different roles
         switch ($user['user_role']) {
-            case 'patient':
-                $this->patientLabServices($user);
+            case 'staff':
+                $this->staffLabServices($user);
                 break;
             case 'doctor':
                 $this->doctorLabServices($user);
@@ -35,9 +35,25 @@ class LabController extends BaseController
             case 'admin':
                 $this->adminLabServices($user);
                 break;
+            case 'patient':
+                $this->patientLabServices($user);
+                break;
             default:
                 $this->redirect('dashboard');
         }
+    }
+
+    public function downloadResultFile(string $filename): void
+    {
+        // Ensure the filename ends with ".pdf"
+        if (!str_ends_with($filename, '.pdf')) {
+            $filename .= '.pdf';
+        }
+
+        $safeFilename = basename($filename);
+
+        $this->labModel->getResultFile($safeFilename);
+        exit();
     }
 
     private function extractPatientId($userId)
@@ -61,14 +77,11 @@ class LabController extends BaseController
         $patientId = $this->extractPatientId($user['user_id']);
         $medicalRecordModel = new MedicalRecord();
         $medicalHistory = $medicalRecordModel->getMedicalHistory($patientId);
-
         $maGiayKhamBenhArray = [];
 
         foreach ($medicalHistory['data'][0]['MedicalRecords'] as $record) {
             $maGiayKhamBenhArray[] = $record['MaGiayKhamBenh'];
         }
-
-        // print_r($maGiayKhamBenhArray);
         $DichVuSuDungAll = [];
         $labModel = new Lab();
         foreach ($maGiayKhamBenhArray as $MaGiayKhamBenh) {
@@ -81,7 +94,6 @@ class LabController extends BaseController
                 }
             }
         }
-        // print_r($DichVuSuDungAll);
 
         $this->render('lab/patient', [
             'user' => $user,
@@ -91,23 +103,145 @@ class LabController extends BaseController
 
     private function doctorLabServices($user)
     {
-        // TODO: Implement doctor lab services view
+        $rawUsedServices = $this->labModel->getAllUsedServices();
+        $rawServices = $this->labModel->getAllServices();
+
+        $usedServices = $rawUsedServices['data'][0];  
+        $services = $rawServices['data'][0];         
+
+        $serviceMap = [];
+        foreach ($services as $s) {
+            $serviceMap[$s['MaDichVu']] = $s;
+        }
+
+        foreach ($usedServices as &$us) {
+            $ma = $us['MaDichVu'];
+            if (isset($serviceMap[$ma])) {
+                $us['TenDichVu'] = $serviceMap[$ma]['TenDichVu'];
+                $us['NoiDungDichVu'] = $serviceMap[$ma]['NoiDungDichVu'];
+                $us['DonGia'] = $serviceMap[$ma]['DonGia'];
+                $filepath = $us['FileKetQua'] ?? '';
+                $us['FileKetQua'] = pathinfo($filepath, PATHINFO_FILENAME);
+            }
+        }
+
         $this->render('lab/doctor', [
             'user' => $user,
-            'message' => 'Doctor lab services view coming soon!'
+            'usedServices' => $usedServices,
+            'services' => $services
         ]);
+    }
+
+    private function staffLabServices($user)
+    {
+
+        $rawUsedServices = $this->labModel->getAllUsedServices();
+        $rawServices = $this->labModel->getAllServices();
+
+        $usedServices = $rawUsedServices['data'][0];  
+        $services = $rawServices['data'][0];         
+
+        $serviceMap = [];
+        foreach ($services as $s) {
+            $serviceMap[$s['MaDichVu']] = $s;
+        }
+
+        foreach ($usedServices as &$us) {
+            $ma = $us['MaDichVu'];
+            if (isset($serviceMap[$ma])) {
+                $us['TenDichVu'] = $serviceMap[$ma]['TenDichVu'];
+                $us['NoiDungDichVu'] = $serviceMap[$ma]['NoiDungDichVu'];
+                $us['DonGia'] = $serviceMap[$ma]['DonGia'];
+                $filepath = $us['FileKetQua'] ?? '';
+                $us['FileKetQua'] = pathinfo($filepath, PATHINFO_FILENAME);
+            }
+        }
+        $this->render('lab/staff', [
+            'user' => $user,
+            'usedServices' => $usedServices,
+            'services' => $services
+        ]);
+
     }
 
     private function adminLabServices($user)
     {
-        // Get all lab services for admin
-        $allUsedServices = $this->labModel->getAllUsedServices();
-        $allServices = $this->labModel->getAllServices();
+
+        $rawUsedServices = $this->labModel->getAllUsedServices();
+        $rawServices = $this->labModel->getAllServices();
+
+        $usedServices = $rawUsedServices['data'][0];  
+        $services = $rawServices['data'][0];         
+
+        $serviceMap = [];
+        foreach ($services as $s) {
+            $serviceMap[$s['MaDichVu']] = $s;
+        }
+
+        foreach ($usedServices as &$us) {
+            $ma = $us['MaDichVu'];
+            if (isset($serviceMap[$ma])) {
+                $us['TenDichVu'] = $serviceMap[$ma]['TenDichVu'];
+                $us['NoiDungDichVu'] = $serviceMap[$ma]['NoiDungDichVu'];
+                $us['DonGia'] = $serviceMap[$ma]['DonGia'];
+                
+                $filepath = $us['FileKetQua'] ?? '';
+                $us['FileKetQua'] = pathinfo($filepath, PATHINFO_FILENAME);
+            }
+        }
 
         $this->render('lab/admin', [
             'user' => $user,
-            'usedServices' => $allUsedServices,
-            'services' => $allServices
+            'usedServices' => $usedServices,
+            'services' => $services
+        ]);
+
+    }
+
+    public function viewUsedService($usedServiceId)
+    {
+        $this->requireLogin();
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        if (!$usedServiceId) {
+            $this->redirect('lab');
+            return;
+        }
+
+        $response = $this->labModel->getUsedServiceById($usedServiceId);
+
+        // Filter only array items
+        $validRecords = array_filter($response['data'] ?? [], 'is_array');
+        $usedService = reset($validRecords);
+
+        // Redirect if invalid or not found
+        if (!$response || $response['status'] !== 200 || empty($usedService)) {
+            $this->redirect('lab');
+            return;
+        }
+
+        $filepath = $usedService['FileKetQua'] ?? '';
+        $usedService['FileKetQua'] = pathinfo($filepath, PATHINFO_FILENAME);
+
+        // Get service details
+        $serviceDetails = null;
+        if (!empty($usedService['MaDichVu'])) {
+            $serviceResponse = $this->labModel->getServiceById($usedService['MaDichVu']);
+            if ($serviceResponse && $serviceResponse['status'] === 200) {
+                $serviceDetails = $serviceResponse['data'];
+            }
+        }
+
+        // Render view
+        $this->render('lab/viewusedservice', [
+            'user' => $user,
+            'usedService' => $usedService,
+            'serviceDetails' => $serviceDetails
         ]);
     }
 
@@ -170,4 +304,208 @@ class LabController extends BaseController
         $result = $labModel->downloadResultFile($usedServiceId);
         error_log(print_r($result));
     }
+
+    public function updateUsedServicePaidStatus()
+    {
+        $medicalRecordId = $_POST['medicalRecordId'] ?? null;
+        $this->requireLogin();
+
+        // echo '<pre>';
+        // print_r($medicalRecordId);
+        // echo '</pre>';
+        // exit();
+        $user = $_SESSION['user'] ?? null;
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        if (empty($medicalRecordId)) {
+            $_SESSION['error'] = 'Medical Record ID is required.';
+            $this->redirect('lab');
+            return;
+        }
+
+$response = $this->labModel->updatePaidUsedService($medicalRecordId);
+
+if ($response['status'] === 200 && is_array($response['data'])) {
+    $_SESSION['success'] = 'All services marked as paid.';
+} else {
+    $_SESSION['error'] = $response['error'] 
+        ?? "Failed to update payment status. HTTP {$response['status']}";
+}
+
+header('Location: /lab/staff#paid-panel');
+exit();
+
+    }
+
+
+    public function updateUsedService()
+    {
+        $id = $_POST['MaDVSD'];
+        $ketQua = $_POST['KetQua'];
+        $fileKetQua = $_POST['FileKetQua'] ?? null;
+
+        $usedServiceData = [
+            'KetQua' => $ketQua,
+            'FileKetQua' => $fileKetQua
+        ]; 
+        // Optional file upload
+        $file = $_FILES['file_upload'] ?? null; 
+
+        $updated = $this->labModel->updateUsedService($id, $usedServiceData, $file);
+
+        if ($updated) {
+            header("Location: /lab/staff");
+            exit();
+        } else {
+            echo "Failed to update used service.";
+        }
+    }
+
+    public function addServiceForm() {
+        $this->render('lab/addservice');
+    }
+
+    public function addUsedServiceForm() {
+        $this->render('lab/addusedservice');
+    }
+
+    public function searchService()
+    {
+        $query = trim($_GET['query'] ?? '');
+        $user = $_SESSION['user'] ?? [];
+        $usedServices = [];
+
+        if ($query === '') {
+            $response = $this->labModel->getAllServices();
+        } else {
+            $response = $this->labModel->getServiceById($query);
+        }
+
+        if ($response['status'] !== 200 || empty($response['data'])) {
+            return $this->render($this->getLabViewByRole($user['user_role']), [
+                'services' => [],
+                'user' => $user,
+                'usedServices' => $usedServices
+            ]);
+        }
+
+        $firstItem = $response['data'][0];
+
+        $services = isset($firstItem['MaDichVu']) ? [$firstItem] : $firstItem;
+
+        $this->render($this->getLabViewByRole($user['user_role']), [
+            'services' => $services,
+            'user' => $user,
+            'usedServices' => $usedServices
+        ]);
+    }
+
+    public function getLabViewByRole(string $role): string
+    {
+        return match ($role) {
+            'staff' => 'lab/staff',
+            'doctor' => 'lab/doctor',
+            'admin' => 'lab/admin',
+            'patient' => 'lab/admin', 
+            default => 'dashboard'
+        };
+    }
+
+
+    public function createService()
+    {
+        $serviceData = [
+            'TenDichVu' => $_POST['TenDichVu'] ?? '',
+            'NoiDungDichVu' => $_POST['NoiDungDichVu'] ?? '',
+            'DonGia' => $_POST['DonGia'] ?? 0,
+        ];
+
+        $labModel = new Lab();
+        $response = $labModel->createService($serviceData);
+
+        if ($response['status'] == 200 || $response['status'] == 201) {
+            header("Location: /lab/staff");
+            exit;
+        } else {
+            echo "Failed to create service: " . ($response['data']['error'] ?? 'Unknown error');
+        }
+    }
+
+    public function searchUsedServices()
+    {
+        $medicalRecordId = $_GET['medicalRecordId'] ?? null;
+        $user = $_SESSION['user'] ?? [];
+        $labModel = new Lab();
+
+        if (!empty($medicalRecordId)) {
+            // If input provided, search by medical record ID
+            $response = $labModel->getUsedServicesByMedicalRecord($medicalRecordId);
+        } else {
+            // If no input, fetch all used services
+            $response = $labModel->getAllUsedServices();
+        }
+
+        $usedServices = [];
+
+        if ($response['status'] === 200 && isset($response['data'][0])) {
+            $usedServices = $response['data'][0]; // works for both cases (search or all)
+        }
+
+        // Optional: get all services for display or linking
+        $servicesResponse = $labModel->getAllServices();
+        $services = $servicesResponse['status'] === 200 && isset($servicesResponse['data'][0])
+            ? $servicesResponse['data'][0]
+            : [];
+
+        // Determine the view based on user role
+        $view = $this->getLabViewByRole($user['user_role'] ?? '');
+
+        // If fallback view is 'dashboard', redirect instead of rendering
+        if ($view === 'dashboard') {
+            return $this->redirect('dashboard');
+        }
+
+        $this->render($view, [
+            'user' => $user,
+            'usedServices' => $usedServices,
+            'services' => $services
+        ]);
+    }
+
+
+    public function createUsedService()
+    {
+        $data = [
+            'MaDichVu' => $_POST['MaDichVu'],
+            'MaGiayKhamBenh' => $_POST['MaGiayKhamBenh'],
+            'ThoiGian' => $_POST['ThoiGian'],
+            'YeuCauCuThe' => $_POST['YeuCau'] ?? '',
+            'KetQua' => $_POST['KetQua'] ?? '',
+            'TrangThai' => "ChoThuTien"
+        ];
+        // Handle file upload
+        if (!empty($_FILES['FileKetQua']['name'])) {
+            $uploadDir = 'uploads/results/';
+            $fileName = basename($_FILES['FileKetQua']['name']);
+            $targetPath = $uploadDir . time() . '_' . $fileName;
+
+            if (move_uploaded_file($_FILES['FileKetQua']['tmp_name'], $targetPath)) {
+                $data['FileKetQua'] = $targetPath;
+            }
+        }
+
+        $response = $this->labModel->createUsedService($data);
+
+        if ($response['status'] === 200) {
+            header('Location: /lab/staff#used-panel');
+            exit;
+        }
+        echo "Failed to create used service.";
+    }
+
+
+
 }

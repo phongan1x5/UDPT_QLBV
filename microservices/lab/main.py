@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 import database, routes
-
+from fastapi.staticfiles import StaticFiles
+UPLOAD_DIR = "uploads/results"
 app = FastAPI()
 
+app.mount("/results", StaticFiles(directory=UPLOAD_DIR), name="results")
 app.include_router(routes.router)
 
 @app.on_event("startup")

@@ -3,18 +3,15 @@ class Lab
 {
     private $apiGatewayUrl = 'http://localhost:6000';
 
-    private function callApi($endpoint, $method = 'GET', $data = null, $headers = [])
+    private function callApi($endpoint, $method = 'GET', $data = null, $headers = [], $isBinary = false)
     {
         $url = $this->apiGatewayUrl . $endpoint;
         $curl = curl_init();
 
-        // Default headers
         $defaultHeaders = [
-            'Content-Type: application/json',
-            'Accept: application/json'
+            'Accept: application/pdf, application/octet-stream, */*',
         ];
 
-        // Merge with additional headers (like Authorization)
         $allHeaders = array_merge($defaultHeaders, $headers);
 
         curl_setopt_array($curl, [
@@ -32,6 +29,7 @@ class Lab
         $response = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $error = curl_error($curl);
+
         curl_close($curl);
 
         if ($error) {
@@ -42,10 +40,10 @@ class Lab
             ];
         }
 
-        return [
-            'status' => $httpCode,
-            'data' => json_decode($response, true)
-        ];
+        // If response is binary (e.g. PDF), return raw data
+        return $isBinary
+            ? ['status' => $httpCode, 'data' => $response]  // raw binary data
+            : ['status' => $httpCode, 'data' => json_decode($response, true)];
     }
 
     // Lab Services methods
@@ -122,7 +120,7 @@ class Lab
         return $this->callApi('/lab/used-services', 'POST', $usedServiceData, $headers);
     }
 
-    public function updateUsedService($usedServiceId, $usedServiceData, $file = null)
+    public function updateUsedService($usedServiceId, $usedServiceData, $file)
     {
         $token = $_SESSION['user']['token'] ?? null;
 
@@ -130,10 +128,39 @@ class Lab
             return ['status' => 401, 'data' => ['error' => 'Authentication required']];
         }
 
-        // For file uploads, we'll need to use multipart/form-data
-        // This would be handled differently in a real implementation
-        $headers = ['Authorization: Bearer ' . $token];
-        return $this->callApi('/lab/used-services/' . $usedServiceId, 'PUT', $usedServiceData, $headers);
+        $url = $this->apiGatewayUrl . '/lab/used-services/' . $usedServiceId;
+
+        $headers = [
+            'Authorization: Bearer ' . $token,
+        ];
+
+        // Prepare multipart form data
+        $postFields = [
+            'KetQua' => $usedServiceData['KetQua'],
+        ];
+
+        if ($file && $file['error'] === UPLOAD_ERR_OK) {
+            $postFields['file'] = new CURLFile(
+                $file['tmp_name'],
+                $file['type'],
+                $file['name']
+            );
+        }
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return [
+            'status' => $httpCode,
+            'data' => json_decode($response, true)
+        ];
     }
 
 
@@ -160,7 +187,26 @@ class Lab
         $headers = ['Authorization: Bearer ' . $token];
         return $this->callApi('/lab/services', 'POST', $serviceData, $headers);
     }
+    public function getResultFile(string $filename)
+  {        
+  $headers = ['Authorization: Bearer ' . $token];
 
+        $endpoint = "/lab/used-services/results/{$filename}";
+        $resp = $this->callApi($endpoint, 'GET', null, $headers, true);
+
+        if ($resp['status'] === 200 && $resp['data'] !== null) {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="'.$filename.'"');
+            echo $resp['data'];
+            exit;
+        }
+
+        // error handling:
+        http_response_code($resp['status']);
+        echo $resp['error'] ?? 'Unknown error';
+        exit;
+    }      
+}
 
     public function downloadResultFile($usedServiceId)
     {
@@ -339,4 +385,69 @@ class Lab
         echo $fileData;
         exit;
     }
+
+    public function updatePaidUsedService($medicalRecordId)
+    {  
+        // echo '<pre>';
+        // print_r($medicalRecordId);
+        // echo '</pre>';
+        // exit();
+        $headers = ['Authorization: Bearer ' . $token];
+        return $this->callApi('/lab/used-services/paid_medical_record/' . $medicalRecordId , 'PUT', null, $headers);
+    }
+    // public function updatePaidUsedService(int $medicalRecordId): array
+    // {
+    //     $token = $_SESSION['user']['token'] ?? null;
+    //     if (!$token) {
+    //         return [
+    //             'status' => 401,
+    //             'data'   => null,
+    //             'error'  => 'Authentication required'
+    //         ];
+    //     }
+    //     // ⚠️ Make sure the endpoint exactly matches your gateway routing:
+    //     $url = $this->apiGatewayUrl
+    //          . '/lab/used-services/paid_medical_record/' 
+    //          . $medicalRecordId;
+
+    //     $headers = [
+    //       'Authorization: Bearer ' . $token
+    //     ];
+
+    //     $ch = curl_init($url);
+    //     curl_setopt_array($ch, [
+    //         CURLOPT_RETURNTRANSFER => true,
+    //         CURLOPT_CUSTOMREQUEST  => 'PUT',
+    //         CURLOPT_HTTPHEADER     => $headers,
+    //         CURLOPT_TIMEOUT        => 30,
+    //     ]);
+
+    //     $response   = curl_exec($ch);
+    //     $httpCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    //     $error      = curl_error($ch);
+    //     curl_close($ch);
+
+    //     if ($error) {
+    //         return [
+    //             'status' => 500,
+    //             'data'   => null,
+    //             'error'  => $error
+    //         ];
+    //     }
+
+    //     // Try to decode JSON response
+    //     $decoded = json_decode($response, true);
+    //     if (json_last_error() !== JSON_ERROR_NONE) {
+    //         return [
+    //             'status' => $httpCode,
+    //             'data'   => null,
+    //             'error'  => 'JSON decode error: ' . json_last_error_msg()
+    //         ];
+    //     }
+    //     return [
+    //         'status' => $httpCode,
+    //         'data'   => $decoded,
+    //         'error'  => null
+    //     ];
+    // }
 }

@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Response
 import httpx
 from database import MICROSERVICE_URLS
+from fastapi.responses import StreamingResponse
+import io
 
 router = APIRouter()
 
 # Helper function
-async def forward_request(method: str, url: str, data=None, headers=None, require_auth=True, request: Request = None):
+
+async def forward_request(method: str, url: str, data=None, headers=None, require_auth=True, request: Request = None, stream_binary: bool = False,):
     # Verify token with the auth service if required
     if require_auth:
         if not request:
@@ -47,7 +50,11 @@ async def forward_request(method: str, url: str, data=None, headers=None, requir
             else:
                 raise ValueError("Unsupported HTTP method")
             resp.raise_for_status()
-            return resp.json(), resp.status_code
+            if stream_binary:
+            # proxy the raw bytes, preserve content-type
+                return Response(content=resp.content, media_type=resp.headers.get("content-type"))
+            else:
+                return resp.json(), resp.status_code
         except httpx.RequestError as e:
             raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
         except httpx.HTTPStatusError as e:
@@ -192,6 +199,9 @@ async def create_used_service(request: Request):
     data = await request.json()
     return await forward_request("POST", f"{MICROSERVICE_URLS['lab']}/used-services", data=data, request=request)
 
+@router.put("/lab/used-services/paid_medical_record/{medical_record_id}")
+async def paid_used_service_medical_record(medical_record_id: int, request: Request):
+    return await forward_request("PUT", f"{MICROSERVICE_URLS['lab']}/used-services/paid_medical_record/{medical_record_id}", request=request)
 # Keep the update route as form handling (for file uploads)
 @router.put("/lab/used-services/{used_service_id}")
 async def update_used_service(used_service_id: int, request: Request):
@@ -244,6 +254,7 @@ async def list_used_services(request: Request, skip: int = 0, limit: int = 100):
 @router.get("/lab/used-services/{used_service_id}")
 async def get_used_service(used_service_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['lab']}/used-services/{used_service_id}", request=request)
+
 
 @router.delete("/lab/used-services/{used_service_id}")
 async def delete_used_service(used_service_id: int, request: Request):
@@ -336,6 +347,17 @@ async def view_result_file(used_service_id: int, request: Request):
             raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
         except httpx.HTTPStatusError as e:
             raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+
+
+@router.get("/lab/used-services/results/{filename}")
+async def secure_file(filename: str, request: Request):
+    lab_url = f"{MICROSERVICE_URLS['lab']}/used-services/results/{filename}"
+    return await forward_request(
+        method="GET",
+        url=lab_url,
+        request=request,
+        stream_binary=True,
+    )
 
 # === PHARMACY SERVICE ROUTES (CLEANED UP) ===
 # Medicine routes

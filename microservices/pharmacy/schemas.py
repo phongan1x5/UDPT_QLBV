@@ -11,6 +11,9 @@ class ThuocBase(BaseModel):
 class ThuocCreate(ThuocBase):
     pass
 
+class ThuocUpdate(ThuocBase):
+    pass
+
 class ThuocResponse(ThuocBase):
     MaThuoc: int
 
