@@ -10,13 +10,6 @@ ob_start();
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1><i class="fas fa-file-medical-alt"></i> Medical Record Details</h1>
-                    <!-- <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="<?php echo url('dashboard'); ?>">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="<?php echo url('medical-records'); ?>">Medical Records</a></li>
-                            <li class="breadcrumb-item active">Record #<?php echo $medicalRecord['MedicalRecord']['MaGiayKhamBenh']; ?></li>
-                        </ol>
-                    </nav> -->
                 </div>
                 <div>
                     <!-- <button onclick="window.print()" class="btn btn-outline-primary">
@@ -67,7 +60,17 @@ ob_start();
                                 </tr>
                                 <tr>
                                     <td><strong>Status:</strong></td>
-                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <?php
+                                            if ($medicalRecord['MedicalRecord']['ChanDoan'] !== '@Pending examination') {
+                                                echo htmlspecialchars($medicalRecord['MedicalRecord']['ChanDoan']);
+                                            } else {
+                                                echo 'Pending';
+                                            }
+                                            ?>
+                                        </span>
+                                    </td>
                                 </tr>
                             </table>
                         </div>

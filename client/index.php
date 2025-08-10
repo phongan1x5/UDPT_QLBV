@@ -93,6 +93,16 @@ switch ($pathParts[0]) {
                 $controller->book();
                 break;
             }
+
+            if ($pathParts[1] == 'cancel') {
+                if (isset($pathParts[2])) {
+                    //When a staff book for patient
+                    $controller->cancelAppointment($pathParts[2]);
+                    break;
+                }
+                break;
+            }
+
             if ($pathParts[1] == 'available-slots') {
                 $controller->getAvailableSlots();
                 break;
@@ -115,6 +125,25 @@ switch ($pathParts[0]) {
                     break;
                 }
             }
+
+            if ($pathParts[1] == 'doctorSchedule') {
+                if (isset($pathParts[2])) {
+                    $controller->doctorSchedule($pathParts[2]);
+                    break;
+                } else {
+                    $controller->doctorSchedule();
+                    break;
+                }
+            }
+
+            if ($pathParts[1] == 'doctorAppointments') {
+                if (isset($pathParts[2])) {
+                    $controller->doctorAppointments($pathParts[2]);
+                }
+                break;
+            }
+
+            $controller->index();
             break;
         }
         $controller->index();
@@ -122,6 +151,12 @@ switch ($pathParts[0]) {
 
     case 'prescriptions':
         $controller = new PrescriptionController();
+        if (isset($pathParts[1]) && $pathParts[1] === 'view-detail') {
+            if (isset($pathParts[2])) {
+                $controller->viewDetailPrescription($pathParts[2]);
+            }
+            break;
+        }
         $controller->index();
         break;
 
@@ -133,10 +168,19 @@ switch ($pathParts[0]) {
             }
             break;
         }
+
         if (isset($pathParts[1]) && $pathParts[1] === 'doctorRecents') {
             $controller->doctorRecentMedicalRecord();
             break;
         }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'updateHistory') {
+            if (isset($pathParts[2])) { //MaHSBA
+                $controller->updateHistory(intval($pathParts[2]));
+            }
+            break;
+        }
+
         if (isset($pathParts[1])) {
             $controller->index($pathParts[1]);
             break;
@@ -173,6 +217,46 @@ switch ($pathParts[0]) {
         }
         break;
 
+    case 'labResults':
+        $controller = new LabController();
+        // if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        //     $controller->updateUsedService();
+        // } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        //     $controller->createService();
+        // } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
+        //     $controller->addServiceForm();
+        // } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        //     $controller->searchService();
+        // } else {
+        //     $controller->index();
+        // }
+        if (isset($pathParts[1]) && $pathParts[1] === 'download' && isset($pathParts[2])) {
+            $controller->downloadLabResult($pathParts[2]);
+            return;
+        }
+        $controller->index();
+        break;
+
+    // case 'lab':
+    //     $controller = new LabController();
+    //     if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $controller->updateUsedService();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $controller->createService();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $controller->createUsedService();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
+    //         $controller->addServiceForm();
+    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    //         $controller->searchService();
+    //     } else if (isset($pathParts[2]) && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    //         $controller->searchUsedServices();
+    //     } else if (isset($pathParts[1]) && $pathParts[1] === 'addusedservice') {
+    //         $controller->addUsedServiceForm();
+    //     } else {
+    //         $controller->index();
+    //     }
+    //     break;
     case 'pharmacy':
         $controller = new PharmacyController();
 
@@ -203,10 +287,19 @@ switch ($pathParts[0]) {
             $controller->requestLabService();
             break;
         }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'remove-lab-service') {
+            if (isset($pathParts[2])) {
+                $controller->removeLabService($pathParts[2]);
+            }
+            break;
+        }
+
         if (isset($pathParts[1]) && $pathParts[1] === 'submit-prescription') {
             $controller->submitPrescription();
             break;
         }
+
         if (isset($pathParts[1])) {
             $controller->index(intval($pathParts[1]));
         }
@@ -222,6 +315,10 @@ switch ($pathParts[0]) {
             $controller->lookupPatientForAppointmentFees();
             break;
         }
+        if (isset($pathParts[1]) && $pathParts[1] === 'doctorAppointments') {
+            $controller->lookupDoctorAppointments();
+            break;
+        }
 
     case 'admin':
         $controller = new AdminController();
@@ -229,10 +326,27 @@ switch ($pathParts[0]) {
             $controller->createStaff();
             break;
         }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'createDepartment') {
+            $controller->createDepartment();
+            break;
+        }
+
         if (isset($pathParts[1]) && $pathParts[1] === 'submitCreateStaff') {
             $controller->submitCreateStaff();
             break;
         }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'prescriptionReport') {
+            $controller->prescriptionReport();
+            break;
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'patientReport') {
+            $controller->patientReport();
+            break;
+        }
+
         break;
 
     case 'deskStaff':

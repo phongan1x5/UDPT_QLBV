@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
+echo '<pre>';
+print_r($medicalRecords);
+echo '</pre>';
 ?>
 
 <div class="container-fluid">
@@ -40,7 +43,7 @@ ob_start();
                     <?php
                     $pendingCount = 0;
                     foreach ($medicalRecords as $record) {
-                        if ($record['ChanDoan'] === 'Pending examination') {
+                        if ($record['ChanDoan'] === '@Pending examination') {
                             $pendingCount++;
                         }
                     }
@@ -182,7 +185,7 @@ ob_start();
                                                 </a>
                                             </td>
                                             <td>
-                                                <?php if ($record['ChanDoan'] === 'Pending examination'): ?>
+                                                <?php if ($record['ChanDoan'] === '@Pending examination'): ?>
                                                     <span class="badge bg-warning">
                                                         <i class="fas fa-clock"></i> Pending
                                                     </span>
@@ -205,7 +208,7 @@ ob_start();
                                                         class="btn btn-outline-primary" title="View Details">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <!-- <?php if ($record['ChanDoan'] === 'Pending examination'): ?>
+                                                    <!-- <?php if ($record['ChanDoan'] === '@Pending examination'): ?>
                                                         <a href="<?php echo url('consultation/' . $record['MaLichHen']); ?>"
                                                             class="btn btn-outline-success" title="Continue Consultation">
                                                             <i class="fas fa-stethoscope"></i>

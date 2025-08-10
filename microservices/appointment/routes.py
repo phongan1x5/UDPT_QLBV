@@ -66,7 +66,7 @@ async def create_medical_record(appointment_id: int, patient_id: int, doctor_id:
                     "BacSi": doctor_id,  # Doctor ID (MaNhanVien)
                     "MaLichHen": appointment_id,  # Appointment ID
                     "NgayKham": datetime.now().strftime("%Y-%m-%d"),  # Examination date
-                    "ChanDoan": "Pending examination",  # Initial diagnosis - will be updated during consultation
+                    "ChanDoan": "@Pending examination",  # Initial diagnosis - will be updated during consultation
                     "LuuY": f"Medical record created for appointment #{appointment_id} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"  # Notes
                 }
                 
@@ -114,7 +114,7 @@ async def create_appointment(appointment: schemas.AppointmentCreate, db: Session
         models.Appointment.MaBacSi == appointment.MaBacSi,
         models.Appointment.Ngay == appointment.Ngay,
         models.Appointment.Gio == appointment.Gio,
-        models.Appointment.TrangThai.in_(["ChoXacNhan", "DaXacNhan", 'DaThuTien'])
+        models.Appointment.TrangThai.in_(["ChoXacNhan", "DaXacNhan", 'DaThuTien', 'DaKham'])
     ).first()
 
     if existing_appointment:
@@ -125,25 +125,6 @@ async def create_appointment(appointment: schemas.AppointmentCreate, db: Session
     db.add(db_appointment)
     db.commit()
     db.refresh(db_appointment)
-    
-    # Create medical record for this appointment
-    try:
-        medical_record = await create_medical_record(
-            appointment_id=db_appointment.MaLichHen,
-            patient_id=db_appointment.MaBenhNhan,
-            doctor_id=db_appointment.MaBacSi
-        )
-        
-        if medical_record:
-            print(f"Medical record created successfully for appointment {db_appointment.MaLichHen}")
-            print(f"Medical record ID: {medical_record.get('MaGiayKhamBenh', 'Unknown')}")
-        else:
-            print(f"Warning: Failed to create medical record for appointment {db_appointment.MaLichHen}")
-            # Note: We don't fail the appointment creation if medical record creation fails
-            
-    except Exception as e:
-        print(f"Error creating medical record for appointment {db_appointment.MaLichHen}: {str(e)}")
-        # Continue with appointment creation even if medical record fails
     
     return db_appointment
 
@@ -168,7 +149,7 @@ def get_verified_appointments_for_patient(patient_id: int, db: Session = Depends
 @router.get("/appointments/patient/paid/{patient_id}", response_model=list[schemas.AppointmentResponse])
 def get_paid_appointments_for_patient(patient_id: int, db: Session = Depends(get_db)):
     appointments = db.query(models.Appointment).filter(models.Appointment.MaBenhNhan == patient_id,
-        models.Appointment.TrangThai.in_(["DaThuTien"])).all()
+        models.Appointment.TrangThai.in_(["DaThuTien", "DaKham"])).all()
     
     if not appointments:
         # You can choose to return empty list or raise an exception
@@ -275,7 +256,7 @@ def get_available_slots(doctor_id: int, date: str, db: Session = Depends(get_db)
         booked_appointments = db.query(models.Appointment).filter(
             models.Appointment.MaBacSi == doctor_id,
             models.Appointment.Ngay == date,
-            models.Appointment.TrangThai.in_(["ChoXacNhan", "DaXacNhan"])  # Only active appointments
+            models.Appointment.TrangThai.in_(["ChoXacNhan", "DaXacNhan", "DaThuTien", "DaKham"])  # Only active appointments
         ).all()
         
         # Extract booked time slots
@@ -295,11 +276,14 @@ def get_available_slots(doctor_id: int, date: str, db: Session = Depends(get_db)
             time(hour=16, minute=15), time(hour=16, minute=30), time(hour=16, minute=45),
             time(hour=17, minute=0), time(hour=17, minute=15)
         ]
+        print("Demo booked slot: ", booked_times)
         
         # Filter out booked slots and format for response
         available_slots = []
         for slot in valid_slots:
-            if slot not in booked_times:
+            slot_str = str(slot)
+            print("slot data: ", slot_str)
+            if slot_str not in booked_times:
                 # Format time for display
                 display_time = slot.strftime("%I:%M %p")  # e.g., "02:30 PM"
                 api_time = slot.strftime("%H:%M")  # e.g., "14:30" for API

@@ -159,7 +159,7 @@ class PrescriptionController extends BaseController
         ]);
     }
 
-    public function viewPrescription($id)
+    public function viewDetailPrescription($prescriptionId)
     {
         $this->requireLogin();
         $user = $_SESSION['user'] ?? null;
@@ -169,38 +169,11 @@ class PrescriptionController extends BaseController
             return;
         }
 
-        // Get prescription details
-        $prescription = $this->prescriptionModel->getPrescriptionById($id);
+        $prescriptionModel = new Prescription();
+        $detailPrescriptionData = $prescriptionModel->getDetailPrescriptionById($prescriptionId);
 
-        if (!$prescription || $prescription['status'] !== 200) {
-            $this->redirect('prescriptions');
-            return;
-        }
-
-        // Get prescription with medicines by medical record
-        $prescriptionWithMedicines = null;
-        if (isset($prescription['data']['MaGiayKhamBenh'])) {
-            $recordPrescriptions = $this->prescriptionModel->getPrescriptionsByMedicalRecord($prescription['data']['MaGiayKhamBenh']);
-            if (
-                $recordPrescriptions &&
-                $recordPrescriptions['status'] === 200 &&
-                isset($recordPrescriptions['data']) &&
-                is_array($recordPrescriptions['data'])
-            ) {
-
-                foreach ($recordPrescriptions['data'] as $rp) {
-                    if (isset($rp['MaToaThuoc']) && $rp['MaToaThuoc'] == $id) {
-                        $prescriptionWithMedicines = $rp;
-                        break;
-                    }
-                }
-            }
-        }
-
-        $this->render('prescriptions/view', [
-            'user' => $user,
-            'prescription' => $prescription['data'],
-            'prescriptionWithMedicines' => $prescriptionWithMedicines
+        $this->render('prescriptions/detail', [
+            "prescriptionDetail" => $detailPrescriptionData['data'][0]
         ]);
     }
 

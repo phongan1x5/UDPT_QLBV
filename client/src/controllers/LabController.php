@@ -298,95 +298,11 @@ class LabController extends BaseController
         ]);
     }
 
-    public function downloadResult($id)
+    public function downloadLabResult($usedServiceId)
     {
-        $this->requireLogin();
-        $user = $_SESSION['user'] ?? null;
-
-        if (!$user) {
-            $this->redirect('login');
-            return;
-        }
-
-        // Get lab service details
-        $labService = $this->labModel->getUsedServiceById($id);
-
-        if (!$labService || $labService['status'] !== 200) {
-            $this->redirect('lab');
-            return;
-        }
-
-        $labServiceData = $labService['data'];
-
-        // Check if user has permission to download this result
-        if ($user['user_role'] === 'patient') {
-            // Extract patient ID and verify ownership
-            $patientId = $this->extractPatientId($user['user_id']);
-
-            if (!$patientId) {
-                $this->redirect('lab');
-                return;
-            }
-
-            // Get patient's medical history to verify ownership
-            $medicalHistory = $this->medicalRecordModel->getMedicalHistory($patientId);
-
-            $hasAccess = false;
-            if (
-                $medicalHistory &&
-                $medicalHistory['status'] === 200 &&
-                isset($medicalHistory['data'][0]['MedicalRecords'])
-            ) {
-
-                // Check if this lab service belongs to any of the patient's medical records
-                foreach ($medicalHistory['data'][0]['MedicalRecords'] as $record) {
-                    if ($record['MaGiayKhamBenh'] == $labServiceData['MaGiayKhamBenh']) {
-                        $hasAccess = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!$hasAccess) {
-                $_SESSION['error'] = 'You do not have permission to access this lab result.';
-                $this->redirect('lab');
-                return;
-            }
-        }
-
-        // Handle file download
-        if (isset($labServiceData['FileKetQua']) && !empty($labServiceData['FileKetQua'])) {
-            $filePath = $labServiceData['FileKetQua'];
-
-            // Check if file exists (assuming files are stored in a uploads directory)
-            $fullFilePath = __DIR__ . '/../../uploads/lab_results/' . basename($filePath);
-
-            if (file_exists($fullFilePath)) {
-                // Set headers for file download
-                $fileInfo = pathinfo($fullFilePath);
-                $fileName = 'lab_result_' . $id . '.' . ($fileInfo['extension'] ?? 'pdf');
-
-                header('Content-Type: application/octet-stream');
-                header('Content-Disposition: attachment; filename="' . $fileName . '"');
-                header('Content-Length: ' . filesize($fullFilePath));
-                header('Cache-Control: must-revalidate');
-                header('Pragma: public');
-
-                // Clear output buffer
-                ob_clean();
-                flush();
-
-                // Read and output file
-                readfile($fullFilePath);
-                exit;
-            } else {
-                $_SESSION['error'] = 'Result file not found on server.';
-                $this->redirect('lab');
-            }
-        } else {
-            $_SESSION['error'] = 'No result file available for download.';
-            $this->redirect('lab');
-        }
+        $labModel = new Lab();
+        $result = $labModel->downloadResultFile($usedServiceId);
+        error_log(print_r($result));
     }
 
     public function updateUsedServicePaidStatus()

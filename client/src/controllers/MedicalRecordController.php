@@ -107,8 +107,46 @@ class MedicalRecordController extends BaseController
 
         $this->render('medicalRecords/detail', [
             'medicalRecord' => $medicalRecord['data'][0],
-            'labServices' => $labServices['data'][0],
-            'prescription' => $prescription['data'][0]
+            'labServices' => $labServices['data'][0] ?? [],
+            'prescription' => $prescription['data'][0] ?? []
+        ]);
+    }
+
+    public function updateHistory($MaHSBA)
+    {
+        $this->requireLogin();
+
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $medicalRecordModel = new MedicalRecord();
+        $medicalProfile = $medicalRecordModel->getMedicalProfile($MaHSBA);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $rawInput = file_get_contents('php://input');
+            $data = json_decode($rawInput, true); // true = associative array
+
+            $newMedicalHistory = $data['newMedicalHistory'] ?? null;
+            $profileData = [
+                'MaBenhNhan' => $MaHSBA,
+                'TienSu' => $newMedicalHistory
+            ];
+
+            $response = $medicalRecordModel->updateMedicalProfile($MaHSBA, $profileData);
+            header('Content-Type: application/json');
+            echo json_encode($response);
+
+            return;
+        }
+
+        $this->render('medicalRecords/updateHistoryForm', [
+            'lookupStatus' => $medicalProfile['status'],
+            'currentHistory' => $medicalProfile['data'][0]['MedicalProfile'] ?? []
         ]);
     }
 

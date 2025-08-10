@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 echo '<pre>';
 print_r($patient);
+print_r($medicalHistory['data'][0]['MedicalProfile']['MaHSBA']);
 echo '</pre>';
 ?>
 
@@ -11,12 +12,6 @@ echo '</pre>';
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1><i class="fas fa-file-medical-alt"></i> Medical Records</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Medical Records</li>
-                    </ol>
-                </nav>
             </div>
         </div>
     </div>
@@ -187,6 +182,9 @@ echo '</pre>';
                             <div class="col-md-2 text-end">
                                 <span class="badge bg-<?php echo $medicalProfile['is_active'] ? 'success' : 'secondary'; ?> fs-6">
                                     <?php echo $medicalProfile['is_active'] ? 'Active Patient' : 'Inactive'; ?>
+                                </span>
+                                <span class="badge bg-info fs-6">
+                                    <a href="<?php echo url('medicalRecords/updateHistory/' . $medicalHistory['data'][0]['MedicalProfile']['MaHSBA']) ?>">Update</a>
                                 </span>
                             </div>
                         </div>

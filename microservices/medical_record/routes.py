@@ -79,7 +79,7 @@ def get_medical_record_by_appointmentId(appointmentId: int, db: Session = Depend
 @router.get("/medical-record/byDoctorId/{doctorId}")
 def get_medical_record_by_doctorId(doctorId: int, db: Session = Depends(get_db)):
     record = db.query(models.GiayKhamBenh).filter(and_(models.GiayKhamBenh.BacSi == doctorId,
-            models.GiayKhamBenh.ChanDoan != 'Pending examination'
+            models.GiayKhamBenh.ChanDoan != '@Pending examination'
         )
     ).all()
     if not record:
@@ -136,4 +136,40 @@ def get_medical_history(profile_id: int, db: Session = Depends(get_db)):
     return {
         "MedicalProfile": profile,
         "MedicalRecords": medical_records
+    }
+
+@router.get("/medical-profiles")
+def list_medical_profiles(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Get all medical profiles with pagination
+    """
+    profiles = db.query(models.HoSoBenhAn).filter(
+        models.HoSoBenhAn.is_active == True
+    ).offset(skip).limit(limit).all()
+    
+    total_count = db.query(models.HoSoBenhAn).filter(
+        models.HoSoBenhAn.is_active == True
+    ).count()
+    
+    return {
+        "data": profiles,
+        "total": total_count,
+        "skip": skip,
+        "limit": limit
+    }
+
+@router.get("/medical-records")
+def list_medical_records(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Get all medical records with pagination
+    """
+    records = db.query(models.GiayKhamBenh).offset(skip).limit(limit).all()
+    
+    total_count = db.query(models.GiayKhamBenh).count()
+    
+    return {
+        "data": records,
+        "total": total_count,
+        "skip": skip,
+        "limit": limit
     }

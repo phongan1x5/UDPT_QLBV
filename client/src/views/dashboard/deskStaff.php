@@ -58,12 +58,12 @@ echo '</pre>';
             <div class="card bg-success text-white h-100 shadow-lg">
                 <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 200px;">
                     <div class="mb-3">
-                        <i class="fas fa-money-bill-wave fa-4x mb-3"></i>
-                        <h3 class="card-title">Fee Collection</h3>
-                        <p class="card-text">Collect appointment fees and manage payments</p>
+                        <i class="fas fa-user-md fa-4x mb-3"></i>
+                        <h3 class="card-title">Doctor</h3>
+                        <p class="card-text">Doctor related actions</p>
                     </div>
-                    <a href="<?php echo url('lookup/patientAppointmentFees'); ?>" class="btn btn-light btn-lg">
-                        <i class="fas fa-cash-register"></i> Collect Fees
+                    <a href="<?php echo url('lookup/doctorAppointments'); ?>" class="btn btn-light btn-lg">
+                        <i class="fas fa-cash-register"></i> Appointments
                     </a>
                 </div>
             </div>

@@ -174,29 +174,6 @@ if ($patient && $patient['status'] === 200 && isset($patient['data'][0])) {
                 </div>
             </div>
 
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header bg-warning text-white">
-                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Quick Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="<?php echo url('appointments/book'); ?>" class="btn btn-primary">
-                                <i class="fas fa-calendar-plus"></i> Book Appointment
-                            </a>
-                            <a href="<?php echo url('medical-records'); ?>" class="btn btn-outline-info">
-                                <i class="fas fa-file-medical"></i> View Medical Records
-                            </a>
-                            <a href="<?php echo url('prescriptions'); ?>" class="btn btn-outline-success">
-                                <i class="fas fa-pills"></i> My Prescriptions
-                            </a>
-                            <a href="<?php echo url('lab-results'); ?>" class="btn btn-outline-warning">
-                                <i class="fas fa-flask"></i> Lab Results
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Debug Information (remove in production) -->

@@ -77,7 +77,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?php echo url('medical-records'); ?>">
+                                <a class="nav-link" href="<?php echo url('medicalRecords'); ?>">
                                     <i class="fas fa-file-medical"></i> Medical Records
                                 </a>
                             </li>

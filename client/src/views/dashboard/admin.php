@@ -277,15 +277,15 @@ echo '</pre>';
                 <div class="card-body">
                     <div class="row g-2">
                         <div class="col-md-2">
-                            <a href="#" class="btn btn-outline-primary w-100 mb-2">
+                            <a href="<?php echo url('admin/prescriptionReport'); ?>" class="btn btn-outline-primary w-100 mb-2">
                                 <i class="fas fa-chart-line"></i><br>
-                                <small>Daily Reports</small>
+                                <small>Prescription Reports</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="#" class="btn btn-outline-success w-100 mb-2">
+                            <a href="<?php echo url('admin/patientReport'); ?>" class="btn btn-outline-success w-100 mb-2">
                                 <i class="fas fa-chart-pie"></i><br>
-                                <small>Monthly Stats</small>
+                                <small>Patient Report</small>
                             </a>
                         </div>
                         <div class="col-md-2">

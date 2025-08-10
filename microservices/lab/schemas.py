@@ -29,7 +29,6 @@ class DichVuSuDungCreate(BaseModel):
     MaGiayKhamBenh: int
     ThoiGian: str  # ISO format datetime string
     YeuCauCuThe: str
-    TrangThai: str
 
 class DichVuSuDungResponse(BaseModel):
     MaDVSD: int

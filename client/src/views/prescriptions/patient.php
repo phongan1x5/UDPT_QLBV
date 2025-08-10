@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 ?>
 
@@ -140,7 +141,7 @@ ob_start();
 
                                         <div class="col-md-4 text-end">
                                             <div class="btn-group-vertical" role="group">
-                                                <a href="/prescriptions/view/<?php echo $prescriptionData['MaToaThuoc']; ?>"
+                                                <a href="<?php echo url('/prescriptions/view-detail/' . $prescriptionData['MaToaThuoc']); ?>"
                                                     class="btn btn-outline-primary btn-sm">
                                                     <i class="fas fa-eye"></i> View Details
                                                 </a>
@@ -149,16 +150,8 @@ ob_start();
                                                     <form method="POST" action="/prescriptions/update-status" class="d-inline">
                                                         <input type="hidden" name="prescription_id" value="<?php echo $prescriptionData['MaToaThuoc']; ?>">
                                                         <input type="hidden" name="status" value="Completed">
-                                                        <button type="submit" class="btn btn-success btn-sm"
-                                                            onclick="return confirm('Mark this prescription as completed?')">
-                                                            <i class="fas fa-check"></i> Mark Completed
-                                                        </button>
                                                     </form>
                                                 <?php endif; ?>
-
-                                                <button class="btn btn-outline-info btn-sm" onclick="printPrescription(<?php echo $prescriptionData['MaToaThuoc']; ?>)">
-                                                    <i class="fas fa-print"></i> Print
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -290,11 +283,6 @@ ob_start();
     }
 </style>
 
-<script>
-    function printPrescription(prescriptionId) {
-        window.open('/prescriptions/print/' + prescriptionId, '_blank');
-    }
-</script>
 
 <?php
 $content = ob_get_clean();
