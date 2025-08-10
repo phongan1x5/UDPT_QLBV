@@ -237,26 +237,6 @@ switch ($pathParts[0]) {
         $controller->index();
         break;
 
-    // case 'lab':
-    //     $controller = new LabController();
-    //     if (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    //         $controller->updateUsedService();
-    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    //         $controller->createService();
-    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    //         $controller->createUsedService();
-    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'addservice') {
-    //         $controller->addServiceForm();
-    //     } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    //         $controller->searchService();
-    //     } else if (isset($pathParts[2]) && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    //         $controller->searchUsedServices();
-    //     } else if (isset($pathParts[1]) && $pathParts[1] === 'addusedservice') {
-    //         $controller->addUsedServiceForm();
-    //     } else {
-    //         $controller->index();
-    //     }
-    //     break;
     case 'pharmacy':
         $controller = new PharmacyController();
 

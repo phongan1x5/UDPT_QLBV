@@ -155,7 +155,14 @@ class Prescription
     }
 
     public function getReport($year){
-          return $this->callApi('/reports/prescriptions-by-year/' . $year, 'GET', null, $headers);
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = ['Authorization: Bearer ' . $token];
+        return $this->callApi('/reports/prescriptions-by-year/' . $year, 'GET', null, $headers);
     }
     public function updateMedicine($medicineId, $medicineData)
 

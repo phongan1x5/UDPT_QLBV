@@ -188,8 +188,14 @@ class Lab
         return $this->callApi('/lab/services', 'POST', $serviceData, $headers);
     }
     public function getResultFile(string $filename)
-  {        
-  $headers = ['Authorization: Bearer ' . $token];
+    {        
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = ['Authorization: Bearer ' . $token];
 
         $endpoint = "/lab/used-services/results/{$filename}";
         $resp = $this->callApi($endpoint, 'GET', null, $headers, true);
@@ -206,7 +212,6 @@ class Lab
         echo $resp['error'] ?? 'Unknown error';
         exit;
     }      
-}
 
     public function downloadResultFile($usedServiceId)
     {
@@ -388,6 +393,12 @@ class Lab
 
     public function updatePaidUsedService($medicalRecordId)
     {  
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
         // echo '<pre>';
         // print_r($medicalRecordId);
         // echo '</pre>';

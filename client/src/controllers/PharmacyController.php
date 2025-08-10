@@ -35,7 +35,8 @@ class PharmacyController extends BaseController
                 $this->adminPharmacys($user);   
                 break;
             default:
-                $this->redirect('dashboard');
+                $this->staffPharmacys($user);
+                //$this->redirect('dashboard');
         }
     }
     private function staffPharmacys($user)
@@ -238,7 +239,8 @@ class PharmacyController extends BaseController
     public function updateMedicineForm()
     {
 
-        $medicineId = $_POST['id'] ?? null;
+        $medicineId = $_GET['MaThuoc'] ?? null;
+
         $medicine = $this->PharmacyModel->getMedicineById($medicineId);
 
         if (!$medicine || $medicine['status'] !== 200) {
@@ -253,6 +255,29 @@ class PharmacyController extends BaseController
 
     public function updateMedicine()
     {
-        $this->redirect('pharmacy/staff');
+        $medicineId = $_POST['MaThuoc'] ?? null;
+
+        if (!$medicineId) {
+            $this->redirect('pharmacy/medicines');
+            return;
+        }
+
+        $medicineData = [
+            'TenThuoc' => $_POST['TenThuoc'] ?? '',
+            'DonViTinh' => $_POST['DonViTinh'] ?? '',
+            'ChiDinh' => $_POST['ChiDinh'] ?? null,
+            'SoLuongTonKho' => (int)($_POST['SoLuongTonKho'] ?? 0),
+            'GiaTien' => (float)($_POST['GiaTien'] ?? 0),
+        ];
+
+        $response = $this->PharmacyModel->updateMedicine($medicineId, $medicineData);
+
+        if ($response['status'] === 200 || $response['status'] === 201) {
+            header('Location: /pharmacy/medicines');
+            exit();
+        } else {
+            echo "Failed to update medicine.";
+            var_dump($response);
+        }
     }
 }
