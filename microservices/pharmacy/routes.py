@@ -71,12 +71,99 @@ def create_prescription(prescription: schemas.ToaThuocCreate, db: Session = Depe
 def list_prescriptions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(models.ToaThuoc).offset(skip).limit(limit).all()
 
+@router.get("/prescriptions/with-medicines")
+def list_prescriptions_with_medicines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Get all prescriptions with their associated medicines
+    """
+    # Get prescriptions with pagination
+    prescriptions = db.query(models.ToaThuoc).offset(skip).limit(limit).all()
+    total_count = db.query(models.ToaThuoc).count()
+    
+    prescriptions_with_medicines = []
+    
+    for prescription in prescriptions:
+        # Get medicines for this prescription
+        medicines = db.query(models.ThuocTheoToa, models.Thuoc).join(
+            models.Thuoc, models.ThuocTheoToa.MaThuoc == models.Thuoc.MaThuoc
+        ).filter(models.ThuocTheoToa.MaToaThuoc == prescription.MaToaThuoc).all()
+        
+        prescription_data = {
+            "MaToaThuoc": prescription.MaToaThuoc,
+            "MaGiayKhamBenh": prescription.MaGiayKhamBenh,
+            "TrangThaiToaThuoc": prescription.TrangThaiToaThuoc,
+            "medicines": [
+                {
+                    "MaThuoc": medicine.Thuoc.MaThuoc,
+                    "TenThuoc": medicine.Thuoc.TenThuoc,
+                    "DonViTinh": medicine.Thuoc.DonViTinh,
+                    "SoLuong": medicine.ThuocTheoToa.SoLuong,
+                    "GhiChu": medicine.ThuocTheoToa.GhiChu,
+                    "GiaTien": medicine.Thuoc.GiaTien,
+                    "ThanhTien": float(medicine.Thuoc.GiaTien) * medicine.ThuocTheoToa.SoLuong if medicine.Thuoc.GiaTien else 0
+                }
+                for medicine in medicines
+            ],
+            "total_medicines": len(medicines),
+            "total_cost": sum(
+                float(medicine.Thuoc.GiaTien) * medicine.ThuocTheoToa.SoLuong 
+                for medicine in medicines 
+                if medicine.Thuoc.GiaTien
+            )
+        }
+        
+        prescriptions_with_medicines.append(prescription_data)
+    # print(prescriptions_with_medicines)
+    
+    return {
+        "data": prescriptions_with_medicines,
+        "total": total_count,
+        "skip": skip,
+        "limit": limit
+    }
+
+
+@router.get("/prescriptions/detail/{prescriptionId}")
+def get_detail_prescription_by_prescriptionId(prescriptionId: int, db: Session = Depends(get_db)):
+    """Get the prescription for a specific medical record with medicine details"""
+    prescription = db.query(models.ToaThuoc).filter(
+        models.ToaThuoc.MaToaThuoc == prescriptionId
+    ).first()
+    
+    if not prescription:
+        raise HTTPException(status_code=404, detail=f"No prescription found with MaToaThuoc: {prescriptionId}")
+    
+    # Get medicines for this prescription
+    medicines = db.query(models.ThuocTheoToa, models.Thuoc).join(
+        models.Thuoc, models.ThuocTheoToa.MaThuoc == models.Thuoc.MaThuoc
+    ).filter(models.ThuocTheoToa.MaToaThuoc == prescription.MaToaThuoc).all()
+    
+    prescription_data = {
+        "MaToaThuoc": prescription.MaToaThuoc,
+        "MaGiayKhamBenh": prescription.MaGiayKhamBenh,
+        "TrangThaiToaThuoc": prescription.TrangThaiToaThuoc,
+        "Medicines": [
+            {
+                "MaThuoc": medicine.Thuoc.MaThuoc,
+                "TenThuoc": medicine.Thuoc.TenThuoc,
+                "DonViTinh": medicine.Thuoc.DonViTinh,
+                "SoLuong": medicine.ThuocTheoToa.SoLuong,
+                "GhiChu": medicine.ThuocTheoToa.GhiChu,
+                "GiaTien": medicine.Thuoc.GiaTien
+            }
+            for medicine in medicines
+        ]
+    }
+    
+    return prescription_data
+
 @router.get("/prescriptions/{prescription_id}", response_model=schemas.ToaThuocResponse)  # Simple response
 def get_prescription(prescription_id: int, db: Session = Depends(get_db)):
     prescription = db.query(models.ToaThuoc).filter(models.ToaThuoc.MaToaThuoc == prescription_id).first()
     if not prescription:
         raise HTTPException(status_code=404, detail="Prescription not found")
     return prescription
+
 
 # Custom route for detailed prescription with medicines (no response model)
 @router.get("/prescriptions/medical-record/{medical_record_id}")

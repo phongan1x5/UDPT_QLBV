@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 echo '<pre>';
-print_r($medicalRecord['MedicalRecord']['MaGiayKhamBenh']);
+print_r("appointmentId: " . $appointmentId);
 echo '</pre>';
 $hasPendingLabServices = false;
 foreach ($currentLabServices as $service) {
@@ -150,6 +150,13 @@ foreach ($currentLabServices as $service) {
                                             </div>
                                         </div>
                                         <div class="col-md-4 text-end">
+                                            <?php if ($service['TrangThai'] === "ChoThuTien"): ?>
+                                                <button
+                                                    class="badge bg-danger border-0"
+                                                    onclick="removeService('<?php echo url('consultation/remove-lab-service/' . $service['MaDVSD']); ?>')">
+                                                    Remove
+                                                </button>
+                                            <?php endif; ?>
                                             <?php if (empty($service['KetQua'])): ?>
                                                 <span class="badge bg-warning">Pending</span>
                                             <?php else: ?>
@@ -183,6 +190,7 @@ foreach ($currentLabServices as $service) {
                     <div class="card-body">
                         <form id="medicalRecordForm">
                             <input type="hidden" name="record_id" value="<?php echo $medicalRecord['MedicalRecord']['MaGiayKhamBenh'] ?? ''; ?>">
+                            <input type="hidden" name="appointment_id" value="<?php echo $appointmentId ?? ''; ?>">
 
                             <div class="mb-3">
                                 <label for="diagnosis" class="form-label"><strong>Diagnosis *</strong></label>
@@ -594,10 +602,39 @@ foreach ($currentLabServices as $service) {
         }
     }
 
+    function removeService(url) {
+        if (!confirm('Are you sure you want to remove this service?')) return;
+
+        fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Optionally remove the element from the DOM or show a success message
+                    alert('Service removed successfully.');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000); // 1 seconds delay
+                    // You could also reload part of the page or remove a row dynamically
+                } else {
+                    alert('Failed to remove service.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred.');
+            });
+    }
+
     function submitPrescription() {
         const diagnosis = document.getElementById('diagnosis').value.trim();
         const notes = document.getElementById('notes').value.trim();
         const recordId = document.querySelector('input[name="record_id"]').value;
+        const appointmentId = document.querySelector('input[name="appointment_id"]').value;
 
         if (!diagnosis) {
             showAlert('warning', 'Please enter a diagnosis before submitting the prescription.');
@@ -611,6 +648,7 @@ foreach ($currentLabServices as $service) {
         // CHANGED: Use FormData instead of JSON
         const formData = new FormData();
         formData.append('MaGiayKhamBenh', recordId);
+        formData.append('MaLichHen', appointmentId);
         formData.append('ChanDoan', diagnosis);
         formData.append('LuuY', notes);
         formData.append('medicines', JSON.stringify(prescribedMedicines));

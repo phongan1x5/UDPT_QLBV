@@ -65,7 +65,7 @@ echo '</pre>';
                                         <th>Doctor ID</th>
                                         <th>Type</th>
                                         <th>Status</th>
-                                        <th>Actions</th>
+                                        <!-- <th>Actions</th> -->
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -244,12 +244,8 @@ echo '</pre>';
                                                     </p>
                                                 </div>
                                                 <div class="col-md-4 text-end">
-                                                    <span class="badge bg-success mb-2">Completed</span>
+                                                    <!-- <span class="badge bg-success mb-2">Completed</span> -->
                                                     <br>
-                                                    <a href="/medical-records/view/<?php echo $record['MaGiayKhamBenh']; ?>"
-                                                        class="btn btn-outline-primary btn-sm">
-                                                        <i class="fas fa-eye"></i> View Details
-                                                    </a>
                                                 </div>
                                             </div>
                                         </div>

@@ -64,6 +64,18 @@ class Prescription
         return $this->callApi('/prescriptions/' . $prescriptionId, 'GET', null, $headers);
     }
 
+    public function getDetailPrescriptionById($prescriptionId)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = ['Authorization: Bearer ' . $token];
+        return $this->callApi('/prescriptions/detail/' . $prescriptionId, 'GET', null, $headers);
+    }
+
     public function getPrescriptionsByMedicalRecord($medicalRecordId)
     {
         $token = $_SESSION['user']['token'] ?? null;
@@ -140,5 +152,21 @@ class Prescription
         ];
 
         return $this->callApi('/medicines', 'POST', $medicineData, $headers);
+    }
+
+    public function getReport($year)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token,
+            'Content-Type: application/json'
+        ];
+
+        return $this->callApi('/reports/prescriptions-by-year/' . $year, 'GET', null, $headers);
     }
 }

@@ -104,7 +104,13 @@ ob_start();
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="card-title text-primary mb-0">
                                             <i class="fas fa-stethoscope"></i>
-                                            <?php echo htmlspecialchars($record['ChanDoan']); ?>
+                                            <?php
+                                            if ($record['ChanDoan'] !== '@Pending examination') {
+                                                echo htmlspecialchars($record['ChanDoan']);
+                                            } else {
+                                                echo 'Pending';
+                                            }
+                                            ?>
                                         </h6>
                                         <small class="text-muted">
                                             Record ID: #<?php echo $record['MaGiayKhamBenh']; ?>
@@ -146,7 +152,7 @@ ob_start();
                                 </div>
                                 <div class="col-md-3 text-end">
                                     <div class="mb-2">
-                                        <span class="badge bg-success">Completed</span>
+                                        <!-- <span class="badge bg-success">Completed</span> -->
                                     </div>
                                     <div class="d-grid gap-1">
                                         <a href="<?php echo url('medicalRecords/view-detail/' . $record['MaGiayKhamBenh']) ?>"

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import os
 import models, schemas, database
@@ -143,6 +144,7 @@ def get_used_services_by_medical_record(medical_record_id: int, db: Session = De
             "ThoiGian": used_service.ThoiGian,
             "KetQua": used_service.KetQua,
             "FileKetQua": used_service.FileKetQua,
+            "TrangThai": used_service.TrangThai,
             "Service": {
                 "TenDichVu": service.TenDichVu if service else "Unknown Service",
                 "NoiDungDichVu": service.NoiDungDichVu if service else "",
@@ -173,3 +175,95 @@ async def delete_used_service(
     db.commit()
 
     return service
+
+@router.get("/download/{used_service_id}")
+async def download_result_file(used_service_id: int, db: Session = Depends(get_db)):
+    """
+    Download lab result file by service ID
+    """
+    # Find the used service record
+    used_service = db.query(models.DichVuSuDung).filter(
+        models.DichVuSuDung.MaDVSD == used_service_id
+    ).first()
+    
+    if not used_service:
+        raise HTTPException(status_code=404, detail="Used service not found")
+    
+    if not used_service.FileKetQua:
+        raise HTTPException(status_code=404, detail="No result file available for this service")
+    
+    # Check if file exists
+    if not os.path.exists(used_service.FileKetQua):
+        raise HTTPException(status_code=404, detail="Result file not found on server")
+    
+    # Get file info
+    filename = os.path.basename(used_service.FileKetQua)
+    
+    # Determine media type based on file extension
+    file_extension = os.path.splitext(filename)[1].lower()
+    media_type_map = {
+        '.pdf': 'application/pdf',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.txt': 'text/plain'
+    }
+    
+    media_type = media_type_map.get(file_extension, 'application/octet-stream')
+    
+    return FileResponse(
+        path=used_service.FileKetQua,
+        filename=f"lab_result_{used_service_id}_{filename}",
+        media_type=media_type
+    )
+
+@router.get("/view/{used_service_id}")
+async def view_result_file(used_service_id: int, db: Session = Depends(get_db)):
+    """
+    View lab result file in browser (inline) by service ID
+    """
+    # Find the used service record
+    used_service = db.query(models.DichVuSuDung).filter(
+        models.DichVuSuDung.MaDVSD == used_service_id
+    ).first()
+    
+    if not used_service:
+        raise HTTPException(status_code=404, detail="Used service not found")
+    
+    if not used_service.FileKetQua:
+        raise HTTPException(status_code=404, detail="No result file available for this service")
+    
+    # Check if file exists
+    if not os.path.exists(used_service.FileKetQua):
+        raise HTTPException(status_code=404, detail="Result file not found on server")
+    
+    # Get file info
+    filename = os.path.basename(used_service.FileKetQua)
+    file_extension = os.path.splitext(filename)[1].lower()
+    
+    # Determine media type
+    media_type_map = {
+        '.pdf': 'application/pdf',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.txt': 'text/plain'
+    }
+    
+    media_type = media_type_map.get(file_extension, 'application/octet-stream')
+    
+    # For viewing in browser, we don't want to force download
+    response = FileResponse(
+        path=used_service.FileKetQua,
+        media_type=media_type
+    )
+    
+    # Add headers to display inline (view in browser) instead of download
+    if file_extension in ['.pdf', '.jpg', '.jpeg', '.png', '.txt']:
+        response.headers["Content-Disposition"] = f"inline; filename={filename}"
+    else:
+        response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    
+    return response

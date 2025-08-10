@@ -1,0 +1,7 @@
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkJOMyIsInJvbGUiOiJwYXRpZW50IiwiZXhwIjoxNzU0NzA4NTg1fQ.vsboCSG0qyAjRDVJDCIGCukOwQxobj7VXBAbCidfT98
+
+curl -X PUT "http://localhost:6000/lab/used-services/11" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkJOMyIsInJvbGUiOiJwYXRpZW50IiwiZXhwIjoxNzU0NzA4NTg1fQ.vsboCSG0qyAjRDVJDCIGCukOwQxobj7VXBAbCidfT98" \
+  -H "Content-Type: multipart/form-data" \
+  -F "KetQua=Blood test results: Normal white blood cell count, hemoglobin levels within normal range" \
+  -F "file=@HCMUS-Dynamic-Programming-Student.pdf"

@@ -11,6 +11,7 @@ class TrangThaiType(str, enum.Enum):
     ChoXacNhan = "ChoXacNhan"
     DaXacNhan = "DaXacNhan"
     DaThuTien = "DaThuTien"
+    DaKham = "DaKham"
     DaHuy = "DaHuy"
 
 class Appointment(Base):

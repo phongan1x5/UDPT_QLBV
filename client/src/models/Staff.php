@@ -141,6 +141,25 @@ class Staff
             'Authorization: Bearer ' . $token
         ];
 
-        return $this->callApi('/department', 'POST', $departmentData, $headers);
+        return $this->callApi('/departments', 'POST', $departmentData, $headers);
+    }
+
+
+    public function getAllDepartments()
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        return $this->callApi('/departments', 'GET', null, $headers);
     }
 }

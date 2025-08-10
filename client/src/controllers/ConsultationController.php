@@ -68,12 +68,57 @@ class ConsultationController extends BaseController
         }
     }
 
+    public function removeLabService($MaDVSD)
+    {
+        // Validate required fields
+        if (!$MaDVSD) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Missing required fields: MaDVSD'
+            ]);
+            return;
+        }
+
+        try {
+            // Call your Lab model to create the service
+            $labModel = new Lab();
+            $response = $labModel->deleteUsedService($MaDVSD);
+
+            if ($response['status'] === 200 || $response['status'] === 201) {
+                // Success - return the created service data
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Lab service removed successfully',
+                    'service' => $response['data']
+                ]);
+            } else {
+                // API call failed
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to remove lab service request',
+                    'error' => $response['data'] ?? 'Unknown error'
+                ]);
+            }
+        } catch (Exception $e) {
+            // Handle exceptions
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     public function submitPrescription()
     {
         $this->requireLogin();
 
         // Get form data
         $maGiayKhamBenh = $_POST['MaGiayKhamBenh'] ?? null;
+        $appointmentId = $_POST['MaLichHen'] ?? null;
         $chanDoan = $_POST['ChanDoan'] ?? null;
         $luuY = $_POST['LuuY'] ?? '';
         $medicinesJson = $_POST['medicines'] ?? '[]';
@@ -93,6 +138,7 @@ class ConsultationController extends BaseController
 
         try {
             $medicalRecordModel = new MedicalRecord();
+            $appointmentModel = new Appointment();
             $prescriptionModel = new Prescription();
 
             // First, update the medical record with diagnosis and notes
@@ -136,6 +182,9 @@ class ConsultationController extends BaseController
 
                 $prescriptionId = $prescriptionResult['data']['MaToaThuoc'] ?? null;
             }
+
+            $newAppointmentStatus = 'DaKham';
+            $appointmentUpdateResponse = $appointmentModel->updateAppointmentStatus($appointmentId, $newAppointmentStatus);
 
             // Success response
             header('Content-Type: application/json');
@@ -187,13 +236,15 @@ class ConsultationController extends BaseController
         $doctor = $staffModel->getStaffById($user['user_id']);
         $medicines = $prescriptionModel->getAllMedicines();
         $medicalRecord = $medicalRecordModel->getMedicalRecordById($medicalRecordId);
+        error_log($medicalRecord['data'][0]['MedicalRecord']['MaHSBA']);
         $patient = $patientModel->getPatientById($medicalRecord['data'][0]['MedicalRecord']['MaHSBA']);
         $labServices = $labServiceModel->getAllServices();
         $currentLabServices = $labServiceModel->getUsedServicesByMedicalRecord($medicalRecord['data'][0]['MedicalRecord']['MaGiayKhamBenh']); //In case docter reload the page
         if ($currentLabServices['status'] != 200) {
             $this->render('consulate/doctor', [
                 'doctor' => $doctor['data'][0],
-                'patient' => $patient['data'][0],
+                'appointmentId' => $appointmentId,
+                'patient' => $patient['data'][0] ?? [],
                 'medicines' => $medicines['data'][0],
                 'medicalRecord' => $medicalRecord['data'][0],
                 'labServices' => $labServices['data'][0],
@@ -202,6 +253,7 @@ class ConsultationController extends BaseController
         } else {
             $this->render('consulate/doctor', [
                 'doctor' => $doctor['data'][0],
+                'appointmentId' => $appointmentId,
                 'patient' => $patient['data'][0],
                 'medicines' => $medicines['data'][0],
                 'medicalRecord' => $medicalRecord['data'][0],

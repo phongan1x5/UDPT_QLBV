@@ -79,7 +79,15 @@ async def get_patient(patient_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['patient']}/patients/{patient_id}", request=request)
 
 # Staff_service
-# Add these routes to your API Gateway:
+@router.post("/departments")
+async def create_department(request: Request):
+    data = await request.json()
+    return await forward_request("POST", f"{MICROSERVICE_URLS['staff']}/departments", data=data, request=request)
+
+@router.get("/departments")
+async def get_all_department(request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['staff']}/departments", request=request)
+
 @router.get("/staff/getDoctors")
 async def get_doctors(request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['staff']}/staff/getDoctors", request=request)
@@ -237,6 +245,98 @@ async def list_used_services(request: Request, skip: int = 0, limit: int = 100):
 async def get_used_service(used_service_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['lab']}/used-services/{used_service_id}", request=request)
 
+@router.delete("/lab/used-services/{used_service_id}")
+async def delete_used_service(used_service_id: int, request: Request):
+    return await forward_request("DELETE", f"{MICROSERVICE_URLS['lab']}/used-services/{used_service_id}", request=request)
+
+@router.get("/lab/download/{used_service_id}")
+async def download_result_file(used_service_id: int, request: Request):
+    """
+    Download lab result file by service ID through API Gateway
+    """
+    # Extract the Authorization header
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Authorization token is missing")
+    
+    # Prepare headers for the microservice request
+    headers = {"Authorization": auth_header}
+    
+    # Forward the request to the lab microservice
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{MICROSERVICE_URLS['lab']}/download/{used_service_id}",
+                headers=headers,
+                timeout=30.0
+            )
+            
+            response.raise_for_status()
+            
+            # Get the file content and headers from lab service
+            content = response.content
+            content_type = response.headers.get("content-type", "application/octet-stream")
+            content_disposition = response.headers.get("content-disposition", "")
+            
+            # Return the file response
+            from fastapi.responses import Response
+            return Response(
+                content=content,
+                media_type=content_type,
+                headers={
+                    "Content-Disposition": content_disposition
+                }
+            )
+            
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+
+@router.get("/lab/view/{used_service_id}")
+async def view_result_file(used_service_id: int, request: Request):
+    """
+    View lab result file in browser (inline) by service ID through API Gateway
+    """
+    # Extract the Authorization header
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Authorization token is missing")
+    
+    # Prepare headers for the microservice request
+    headers = {"Authorization": auth_header}
+    
+    # Forward the request to the lab microservice
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{MICROSERVICE_URLS['lab']}/view/{used_service_id}",
+                headers=headers,
+                timeout=30.0
+            )
+            
+            response.raise_for_status()
+            
+            # Get the file content and headers from lab service
+            content = response.content
+            content_type = response.headers.get("content-type", "application/octet-stream")
+            content_disposition = response.headers.get("content-disposition", "")
+            
+            # Return the file response
+            from fastapi.responses import Response
+            return Response(
+                content=content,
+                media_type=content_type,
+                headers={
+                    "Content-Disposition": content_disposition
+                }
+            )
+            
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+
 # === PHARMACY SERVICE ROUTES (CLEANED UP) ===
 # Medicine routes
 @router.post("/medicines")
@@ -270,6 +370,10 @@ async def create_prescription(request: Request):
 @router.get("/prescriptions")
 async def list_prescriptions(request: Request, skip: int = 0, limit: int = 100):
     return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions?skip={skip}&limit={limit}", request=request)
+
+@router.get("/prescriptions/detail/{prescriptionId}")
+async def get_detail_prescription(prescriptionId: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/detail/{prescriptionId}", request=request)
 
 @router.get("/prescriptions/{prescription_id}")
 async def get_prescription(prescription_id: int, request: Request):
@@ -349,6 +453,129 @@ async def delete_medical_record(record_id: int, request: Request):
 @router.get("/medical-history/{profile_id}")
 async def get_medical_history(profile_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['medical_record']}/medical-history/{profile_id}", request=request)
+
+# <==========================================>
+# Report API
+
+@router.get("/reports/prescriptions-by-year/{year}")
+async def get_prescriptions_report_by_year(
+    year: int,
+    request: Request
+):
+    """
+    Simple prescription report by year
+    - Get all medical records, filter by year
+    - Get all prescriptions with medicines  
+    - Merge by MaGiayKhamBenh
+    - Only return medical records that have prescriptions
+    """
+    # Extract the Authorization header
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Authorization token is missing")
+    
+    # Prepare headers for microservice requests
+    headers = {"Authorization": auth_header}
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            # Get all medical records
+            medical_records_response = await client.get(
+                f"{MICROSERVICE_URLS['medical_record']}/medical-records?skip=0&limit=10000",
+                headers=headers,
+                timeout=30.0
+            )
+            medical_records_response.raise_for_status()
+            medical_records_data = medical_records_response.json()
+            
+            # Get all prescriptions with medicines
+            prescriptions_response = await client.get(
+                f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/with-medicines?skip=0&limit=10000",
+                headers=headers,
+                timeout=30.0
+            )
+            prescriptions_response.raise_for_status()
+            prescriptions_data = prescriptions_response.json()
+            
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    
+    try:
+        from datetime import datetime
+        
+        # Extract data from responses
+        medical_records = medical_records_data if isinstance(medical_records_data, list) else medical_records_data.get('data', [])
+        prescriptions = prescriptions_data if isinstance(prescriptions_data, list) else prescriptions_data.get('data', [])
+        # print(medical_records)
+        # print(prescriptions)
+        
+        # Filter medical records by year
+        filtered_medical_records = []
+        for record in medical_records:
+            # Get date from medical record
+            record_date = None
+            date_fields = ['NgayKham']
+            
+            for date_field in date_fields:
+                if record.get(date_field):
+                    record_date = record.get(date_field)
+                    break
+            
+            if record_date:
+                try:
+                    # Parse date
+                    if isinstance(record_date, str):
+                        date_formats = ['%Y-%m-%d', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S', '%d/%m/%Y %H:%M:%S']
+                        parsed_date = None
+                        for date_format in date_formats:
+                            try:
+                                parsed_date = datetime.strptime(record_date.split(' ')[0], date_format)
+                                break
+                            except ValueError:
+                                continue
+                    else:
+                        parsed_date = record_date
+                    
+                    if parsed_date and parsed_date.year == year:
+                        filtered_medical_records.append(record)
+                        
+                except (ValueError, TypeError):
+                    continue
+        
+        # Create prescription lookup by MaGiayKhamBenh
+        prescription_lookup = {}
+        for prescription in prescriptions:
+            ma_giay_kham_benh = prescription.get('MaGiayKhamBenh')
+            if ma_giay_kham_benh:
+                prescription_lookup[ma_giay_kham_benh] = prescription
+        
+        # Merge medical records with prescriptions
+        merged_results = []
+        for medical_record in filtered_medical_records:
+            ma_giay_kham_benh = medical_record.get('MaGiayKhamBenh')
+            
+            # Only include if medical record has a prescription
+            if ma_giay_kham_benh in prescription_lookup:
+                merged_record = {
+                    'medical_record': medical_record,
+                    'prescription': prescription_lookup[ma_giay_kham_benh],
+                    'MaGiayKhamBenh': ma_giay_kham_benh
+                }
+                merged_results.append(merged_record)
+        
+        return {
+            'status': 'success',
+            'year': year,
+            'total_records': len(merged_results),
+            'data': merged_results
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Data processing error: {str(e)}")
+
+
 
 def setup_routes(app):
     app.include_router(router)

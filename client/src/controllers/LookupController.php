@@ -75,4 +75,56 @@ class LookupController extends BaseController
 
         $this->render('lookup/patientAppointmentFees');
     }
+
+    public function findDoctor($doctorId)
+    {
+        $this->requireLogin();
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $doctorModel = new Staff();
+        $doctor = $doctorModel->getStaffById($doctorId);
+
+        return $doctor;
+    }
+
+    public function lookupDoctorAppointments()
+    {
+        $this->requireLogin();
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $doctorId = $_POST['doctor_id'] ?? null;
+            
+            if (!$doctorId) {
+                $_SESSION['lookup_error'] = 'Please enter a doctor ID';
+                $this->redirect('lookup/doctorAppointments');
+                return;
+            }
+
+            // Use the existing findDoctor method
+            $doctor = $this->findDoctor($doctorId);
+            
+            if ($doctor['status'] !== 200) {
+                $_SESSION['lookup_error'] = 'Doctor not found with ID: ' . $doctorId;
+                $this->redirect('lookup/doctorAppointments');
+                return;
+            }
+
+            // Redirect to doctor appointments page
+            $this->redirect('appointments/doctorAppointments/' . $doctorId);
+            return;
+        }
+
+        $this->render('lookup/doctorAppointments');
+    }
 }

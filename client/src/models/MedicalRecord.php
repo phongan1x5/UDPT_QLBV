@@ -99,6 +99,24 @@ class MedicalRecord
         return $this->callApi('/medical-records', 'POST', $recordData, $headers);
     }
 
+    public function getMedicalProfile($MaHSBA)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        return $this->callApi("/medical-profiles/{$MaHSBA}", 'GET', null, $headers);
+    }
+
     /**
      * Get medical profile by patient ID - NEEDED for appointment creation
      */
@@ -118,6 +136,24 @@ class MedicalRecord
         ];
 
         return $this->callApi("/medical-profiles/patient/{$patientId}", 'GET', null, $headers);
+    }
+
+    public function getAllMedicalRecords()
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        return $this->callApi("/medical-records", 'GET', null, $headers);
     }
 
     /**
@@ -202,6 +238,24 @@ class MedicalRecord
         ];
 
         return $this->callApi("/medical-records/{$recordId}", 'PUT', $data, $headers);
+    }
+
+    public function updateMedicalProfile($MaHSBA, $profileData)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        return $this->callApi("/medical-profiles/{$MaHSBA}", 'PUT', $profileData, $headers);
     }
 
     /**

@@ -87,6 +87,5 @@ class DeskStaffController extends BaseController
             ]);
         }
     }
-
-    public function findPatient() {}
+    public function viewDoctorAppointments() {}
 }

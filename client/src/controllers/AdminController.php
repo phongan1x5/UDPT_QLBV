@@ -10,6 +10,42 @@ require_once __DIR__ . '/../models/Lab.php';
 
 class AdminController extends BaseController
 {
+    public function createDepartment()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $staffModel = new Staff();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            $departmentName = $_POST['department_name'] ?? null;
+
+            $departmentData = [
+                'TenPhongBan' => $departmentName
+            ];
+
+            $response = $staffModel->createDepartment($departmentData);
+            header('Content-Type: application/json');
+            echo json_encode($response);
+
+            return;
+        }
+
+        $currentAllDepartments = $staffModel->getAllDepartments();
+
+        $this->render('admin/createDepartment', [
+            "user" => $user,
+            "currentAllDepartments" => $currentAllDepartments['data'][0]
+        ]);
+    }
+
     //User is a docter, userId = docterId
     public function createStaff()
     {
@@ -76,5 +112,70 @@ class AdminController extends BaseController
                 'message' => 'Server error: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public function prescriptionReport()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $year = $_POST['year'] ?? null;
+            $prescriptionModel = new Prescription;
+            $response = $prescriptionModel->getReport($year);
+            if ($response['status'] !== 200) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Server error: '
+                ]);
+                return;
+            }
+            header('Content-Type: application/json');
+            echo json_encode($response['data']);
+            return;
+        }
+
+        $this->render('admin/prescriptionReport');
+    }
+
+    public function patientReport()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $year = $_POST['year'] ?? null;
+            $medicalRecordModel = new MedicalRecord;
+            $response = $medicalRecordModel->getAllMedicalRecords();
+            error_log(print_r($response, true));
+            if ($response['status'] !== 200) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Server error: '
+                ]);
+                return;
+            }
+            header('Content-Type: application/json');
+            echo json_encode($response['data']);
+            return;
+        }
+
+        $this->render('admin/patientReport');
     }
 }

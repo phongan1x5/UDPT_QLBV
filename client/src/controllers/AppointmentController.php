@@ -257,7 +257,7 @@ class AppointmentController extends BaseController
                 'BacSi' => intval($doctorId),
                 'MaLichHen' => intval($appointmentId),
                 'NgayKham' => $appointmentDate,
-                'ChanDoan' => 'Pending examination', // Initial placeholder
+                'ChanDoan' => '@Pending examination', // Initial placeholder
                 'LuuY' => "Medical record created for appointment #{$appointmentId} on " . date('Y-m-d H:i:s')
             ];
 
@@ -308,6 +308,19 @@ class AppointmentController extends BaseController
 
     public function cancelAppointment($appointmentId)
     {
+        $this->requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return;
+        }
+
+        if (!$appointmentId) {
+            header('Content-Type: application/json');
+            echo json_encode(
+                ['error' => 'Missing appointmentId']
+            );
+            return;
+        }
+
         $appointmentModel = new Appointment();
         $newStatus = 'DaHuy';
         $response = $appointmentModel->updateAppointmentStatus($appointmentId, $newStatus);
@@ -316,12 +329,21 @@ class AppointmentController extends BaseController
     }
 
 
-    private function doctorAppointments()
+    public function doctorAppointments($doctorId = "")
     {
-        // TODO: Implement doctor view
-        $this->render('appointments/doctor', [
-            'user' => $_SESSION['user'],
-            'message' => 'Doctor appointments view coming soon!'
+        $this->requireLogin();
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('appointments');
+            return;
+        }
+
+        $appointmentModel = new Appointment();
+        $doctorAppointments = $appointmentModel->getDoctorAppointments($doctorId);
+
+        $this->render("appointments/doctorAppointments", [
+            "appointments" => $doctorAppointments['data'][0]
         ]);
     }
 
@@ -389,8 +411,22 @@ class AppointmentController extends BaseController
         echo json_encode($response);
     }
 
-    public function appointmentsToCollectFees($patientId)
+    public function doctorSchedule($doctorId = "")
     {
-        //Show appointments that need to collect fees for a patient, currentState is "DaXacNhan"
+        $this->requireLogin();
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        if ($doctorId == "") {
+            $doctorId = preg_replace('/^DR/', '', $user['user_id']);
+        }
+
+        $this->render("schedule/doctor", [
+            "doctorId" => $doctorId
+        ]);
     }
 }

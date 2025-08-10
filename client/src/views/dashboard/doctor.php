@@ -274,15 +274,19 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                                                         $badgeClass = 'bg-warning';
                                                         $statusText = 'Pending';
                                                         break;
-                                                    case 'XacNhan':
+                                                    case 'DaXacNhan':
                                                         $badgeClass = 'bg-success';
                                                         $statusText = 'Confirmed';
                                                         break;
-                                                    case 'HoanThanh':
+                                                    case 'DaThuTien':
+                                                        $badgeClass = 'bg-primary';
+                                                        $statusText = 'Fees Collected';
+                                                        break;
+                                                    case 'DaKham':
                                                         $badgeClass = 'bg-primary';
                                                         $statusText = 'Completed';
                                                         break;
-                                                    case 'Huy':
+                                                    case 'DaHuy':
                                                         $badgeClass = 'bg-danger';
                                                         $statusText = 'Cancelled';
                                                         break;
@@ -295,18 +299,13 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
-                                                    <button class="btn btn-outline-primary btn-sm" title="View Patient">
+                                                    <!-- <button class="btn btn-outline-primary btn-sm" title="View Patient">
                                                         <i class="fas fa-user"></i>
-                                                    </button>
+                                                    </button> -->
                                                     <?php if ($appointment['TrangThai'] === 'DaThuTien'): ?>
                                                         <a href="<?php echo url('consultation/' . $appointment['MaLichHen']); ?>" class="btn btn-outline-primary btn-sm">
                                                             <i class="fa-solid fa-stethoscope"></i> Start Consulting
                                                         </a>
-                                                    <?php endif; ?>
-                                                    <?php if ($appointment['TrangThai'] === 'ChoXacNhan'): ?>
-                                                        <button class="btn btn-outline-warning btn-sm" title="Confirm">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
                                                     <?php endif; ?>
                                                 </div>
                                             </td>
@@ -385,10 +384,28 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                                             </p>
                                         </div>
 
-                                        <span class="badge bg-<?php echo $appointment['TrangThai'] === 'DaXacNhan' ? 'success' : 'warning'; ?>">
+                                        <?php
+                                        $statusMap = [
+                                            'ChoXacNhan' => ['label' => 'Pending', 'color' => 'warning'],
+                                            'DaXacNhan' => ['label' => 'Confirmed', 'color' => 'primary'],
+                                            'DaThuTien' => ['label' => 'Fees collected', 'color' => 'info'],
+                                            'DaKham'     => ['label' => 'Completed', 'color' => 'success'],
+                                        ];
+
+                                        $currentStatus = $appointment['TrangThai'];
+                                        $label = $statusMap[$currentStatus]['label'] ?? 'Unknown';
+                                        $color = $statusMap[$currentStatus]['color'] ?? 'secondary';
+                                        ?>
+
+                                        <span class="badge bg-<?php echo $color; ?>">
+                                            <?php echo $label; ?>
+                                        </span>
+
+
+                                        <!-- <span class="badge bg-<?php echo $appointment['TrangThai'] === 'DaXacNhan' ? 'success' : 'warning'; ?>">
                                             <?php echo $appointment['TrangThai'] === 'DaXacNhan' ? 'Confirmed' : 'Pending'; ?>
 
-                                        </span>
+                                        </span> -->
                                         <?php if ($appointment['TrangThai'] === 'DaThuTien'): ?>
                                             <a href="<?php echo url('consultation/' . $appointment['MaLichHen']); ?>" class="btn btn-outline-primary btn-sm">
                                                 <i class="fa-solid fa-stethoscope"></i> Start Consulting
@@ -483,8 +500,12 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                             <i class=" fas fa-user-plus"></i> Patient Lookup
                         </a>
 
-                        <a href="<?php echo url('medicalRecords/doctorRecent'); ?>" class="btn btn-info">
+                        <a href="<?php echo url('medicalRecords/doctorRecents'); ?>" class="btn btn-info">
                             <i class="fa-solid fa-file"></i> Recent Medical Record
+                        </a>
+
+                        <a href="<?php echo url('appointments/doctorSchedule'); ?>" class="btn btn-primary">
+                            <i class="fa-solid fa-calendar-check"></i> My Schedule
                         </a>
 
                         <!-- <button class="btn btn-outline-info">
