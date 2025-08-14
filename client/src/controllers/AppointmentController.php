@@ -341,6 +341,7 @@ class AppointmentController extends BaseController
 
         $appointmentModel = new Appointment();
         $doctorAppointments = $appointmentModel->getDoctorAppointments($doctorId);
+        error_log(print_r($doctorAppointments, true));
 
         $this->render("appointments/doctorAppointments", [
             "appointments" => $doctorAppointments['data'][0]

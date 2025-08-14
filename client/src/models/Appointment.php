@@ -125,13 +125,13 @@ class Appointment
     }
 
     // Cancel an appointment
-    public function cancelAppointment($appointmentId)
-    {
-        $token = $_SESSION['user']['token'] ?? null;
-        $headers = ['Authorization: Bearer ' . $token];
+    // public function cancelAppointment($appointmentId)
+    // {
+    //     $token = $_SESSION['user']['token'] ?? null;
+    //     $headers = ['Authorization: Bearer ' . $token];
 
-        return $this->callApi('/appointments/' . $appointmentId . '/cancel', 'PUT', null, $headers);
-    }
+    //     return $this->callApi('/appointments/' . $appointmentId . '/cancel', 'PUT', null, $headers);
+    // }
 
     // Update appointment status
     public function updateAppointmentStatus($appointmentId, $status)

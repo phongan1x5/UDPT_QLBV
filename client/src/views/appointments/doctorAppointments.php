@@ -119,6 +119,7 @@ ob_start();
 
         const baseUrl = "<?php echo url('/appointments/cancel'); ?>";
         const fullUrl = `${baseUrl}/${appointmentId}`;
+        console.log(fullUrl)
 
         // Make API call
         fetch(fullUrl, {

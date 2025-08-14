@@ -390,6 +390,7 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
                                             'DaXacNhan' => ['label' => 'Confirmed', 'color' => 'primary'],
                                             'DaThuTien' => ['label' => 'Fees collected', 'color' => 'info'],
                                             'DaKham'     => ['label' => 'Completed', 'color' => 'success'],
+                                            'DaHuy'     => ['label' => 'Canceled', 'color' => 'warning'],
                                         ];
 
                                         $currentStatus = $appointment['TrangThai'];
@@ -725,10 +726,13 @@ if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
         confirmBtn.disabled = true;
         cancelBtn.disabled = true;
         cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+        const baseUrl = "<?php echo url('/appointments/cancel'); ?>";
+        const fullUrl = `${baseUrl}/${appointmentId}`;
+        console.log(fullUrl)
 
         // Make API call to cancel appointment
-        fetch(`<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/appointments/${appointmentId}/cancel`, {
-                method: 'PUT',
+        fetch(fullUrl, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
