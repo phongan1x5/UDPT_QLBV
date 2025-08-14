@@ -1,4 +1,7 @@
-<?php ob_start(); ?>
+<?php
+require_once __DIR__ . '/../../helper/url_parsing.php';
+ob_start();
+?>
 
 <div class="container mt-4">
     <h2><i class="fas fa-file-medical"></i> Admin pharmacy</h2>

@@ -81,9 +81,22 @@ async def create_patient(request: Request):
     data = await request.json()
     return await forward_request("POST", f"{MICROSERVICE_URLS['patient']}/patients", data=data, request=request)
 
+@router.put("/patients/{patient_id}")
+async def update_patient(patient_id: int, request: Request):
+    data = await request.json()
+    return await forward_request("PUT", f"{MICROSERVICE_URLS['patient']}/patients/{patient_id}", data=data, request=request)
+
+@router.get("/patients")
+async def get_all_patient(request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['patient']}/patients", request=request)
+
 @router.get("/patients/{patient_id}")
 async def get_patient(patient_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['patient']}/patients/{patient_id}", request=request)
+
+@router.get("/patients/forDoctor/{patient_id}")
+async def get_patient_for_doctor(patient_id: int, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['patient']}/patients/forDoctor/{patient_id}", request=request)
 
 # Staff_service
 @router.post("/departments")
@@ -393,6 +406,14 @@ async def create_prescription(request: Request):
 async def list_prescriptions(request: Request, skip: int = 0, limit: int = 100):
     return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions?skip={skip}&limit={limit}", request=request)
 
+@router.get("/prescriptions/with-medicines")
+async def list_prescriptions(request: Request, skip: int = 0, limit: int = 1000):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/with-medicines", request=request)
+
+@router.post("/prescriptions/handleMedicinePrescription/{prescriptionId}")
+async def handle_medicine_distrubute_prescription(prescriptionId: int, request: Request):
+    return await forward_request("POST", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/handleMedicinePrescription/{prescriptionId}", request=request)
+
 @router.get("/prescriptions/detail/{prescriptionId}")
 async def get_detail_prescription(prescriptionId: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/prescriptions/detail/{prescriptionId}", request=request)
@@ -441,6 +462,90 @@ async def update_medical_profile(profile_id: int, request: Request):
 @router.delete("/medical-profiles/{profile_id}")
 async def delete_medical_profile(profile_id: int, request: Request):
     return await forward_request("DELETE", f"{MICROSERVICE_URLS['medical_record']}/medical-profiles/{profile_id}", request=request)
+
+@router.get("/medical-record/{medical_record_id}/patient")
+async def get_patient_by_medical_record(medical_record_id: int, request: Request):
+    """
+    Get patient data from medical record ID
+    Steps:
+    1. Get medical record by ID
+    2. Extract MaHSBA (patient ID) from medical record
+    3. Get patient data using patient ID
+    4. Return patient data
+    """
+    # Extract the Authorization header
+    # auth_header = request.headers.get("Authorization")
+    # if not auth_header:
+    #     raise HTTPException(status_code=401, detail="Authorization token is missing")
+    
+    # # Prepare headers for microservice requests
+    # headers = {"Authorization": auth_header}
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            # Step 1: Get medical record by ID
+            medical_record_response = await client.get(
+                f"{MICROSERVICE_URLS['medical_record']}/medical-record/{medical_record_id}",
+                # headers=headers,
+                timeout=30.0
+            )
+            medical_record_response.raise_for_status()
+            medical_record_data = medical_record_response.json()
+            
+            # Step 2: Extract MaHSBA (patient ID) from medical record
+            if isinstance(medical_record_data, tuple) and len(medical_record_data) >= 1:
+                # Handle tuple response format (data, status_code)
+                medical_record = medical_record_data[0]
+            else:
+                medical_record = medical_record_data
+            
+            # print("medical record data", medical_record['MedicalRecord'])
+            medical_record = medical_record['MedicalRecord']
+            patient_id = medical_record.get('MaHSBA')
+            # print("patient_id: ", patient_id)
+            if not patient_id:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Patient ID (MaHSBA) not found in medical record {medical_record_id}"
+                )
+            
+            # Step 3: Get patient data using patient ID
+            patient_response = await client.get(
+                f"{MICROSERVICE_URLS['patient']}/patients/{patient_id}",
+                # headers=headers,
+                timeout=30.0
+            )
+            # print("patient response", patient_response.json())
+            patient_response.raise_for_status()
+            patient_data = patient_response.json()
+            
+            # Step 4: Return patient data with additional context
+            if isinstance(patient_data, tuple) and len(patient_data) >= 1:
+                patient = patient_data[0]
+                status_code = patient_data[1] if len(patient_data) > 1 else 200
+            else:
+                patient = patient_data
+                status_code = 200
+            
+            # Return enriched response
+            return {
+                "status": "success",
+                "medical_record_id": medical_record_id,
+                "patient_id": patient_id,
+                "patient": patient
+            }, status_code
+            
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Medical record {medical_record_id} not found or patient not found"
+                )
+            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
 @router.post("/medical-records")
 async def create_medical_record(request: Request):
@@ -597,7 +702,16 @@ async def get_prescriptions_report_by_year(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Data processing error: {str(e)}")
 
+# <================================>
+# Notifcation service route
+@router.get("/user_notification/{user_id}")
+async def get_medical_record(user_id: str, request: Request):
+    return await forward_request("GET", f"{MICROSERVICE_URLS['notification']}/user_notification/{user_id}", request=request)
 
+@router.post("/send-email-and-store")
+async def send_email_and_store(request: Request):
+    data = await request.json()
+    return await forward_request("POST", f"{MICROSERVICE_URLS['notification']}/send-email-and-store", data=data, request=request)
 
 def setup_routes(app):
     app.include_router(router)

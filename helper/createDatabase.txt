@@ -5,3 +5,4 @@ CREATE DATABASE lab_service;
 CREATE DATABASE pharmacy_service;
 CREATE DATABASE medical_record_service;
 CREATE DATABASE staff_service;
+CREATE DATABASE notification_service;

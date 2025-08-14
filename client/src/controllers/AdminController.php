@@ -58,8 +58,12 @@ class AdminController extends BaseController
             return;
         }
 
+        $departmentModel = new Staff();
+        $departments = $departmentModel->getAllDepartments();
+
         $this->render('admin/createStaff', [
-            "user" => $user
+            "user" => $user,
+            "departments" => $departments['data'][0] ?? []
         ]);
     }
 
@@ -112,6 +116,63 @@ class AdminController extends BaseController
                 'message' => 'Server error: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public function viewAllStaff()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $staffModel = new Staff();
+        $staffs = $staffModel->getAllStaff();
+
+        $this->render('admin/viewAllStaff', [
+            'staffs' => $staffs['data'][0]
+        ]);
+    }
+
+    public function viewAllDepartment()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $staffModel = new Staff();
+        $departments = $staffModel->getAllDepartments();
+
+        $this->render('admin/viewAllDepartment', [
+            'departments' => $departments['data'][0]
+        ]);
+    }
+
+    public function viewAllPatient()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $patientModel = new Patient();
+        $patients = $patientModel->getAllPatients();
+
+        $this->render('admin/viewAllPatient', [
+            'patients' => $patients['data'][0]
+        ]);
     }
 
     public function prescriptionReport()
@@ -177,5 +238,220 @@ class AdminController extends BaseController
         }
 
         $this->render('admin/patientReport');
+    }
+
+
+    public function getStaffById($staffId)
+    {
+        $staffModel = new Staff();
+        $response = $staffModel->getStaffByIdDirect($staffId);
+
+        header('Content-Type: application/json');
+
+        if ($response['status'] === 200) {
+            echo json_encode([
+                'success' => true,
+                'staff' => $response['data']
+            ]);
+        } else {
+            http_response_code($response['status']);
+            echo json_encode([
+                'success' => false,
+                'message' => $response['data']['error'] ?? 'Staff not found'
+            ]);
+        }
+    }
+
+    public function updateStaff($staffId)
+    {
+        $staffModel = new Staff();
+        $updateData = json_decode(file_get_contents('php://input'), true);
+
+        $response = $staffModel->updateStaff($staffId, $updateData);
+
+        header('Content-Type: application/json');
+
+        if ($response['status'] === 200) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Staff updated successfully',
+                'staff' => $response['data']
+            ]);
+        } else {
+            http_response_code($response['status']);
+            echo json_encode([
+                'success' => false,
+                'message' => $response['data']['error'] ?? 'Failed to update staff'
+            ]);
+        }
+    }
+
+    public function updateStaffView()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        $staffModel = new Staff();
+        $departments = $staffModel->getAllDepartments();
+
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $this->render('admin/updateStaffView', [
+            'departments' => $departments['data'][0] ?? []
+        ]);
+    }
+
+
+    public function getPatientById($patientId)
+    {
+        $patientModel = new Patient();
+        $response = $patientModel->getPatientById($patientId);
+
+        header('Content-Type: application/json');
+
+        if ($response['status'] === 200) {
+            echo json_encode([
+                'success' => true,
+                'patient' => $response['data']
+            ]);
+        } else {
+            http_response_code($response['status']);
+            echo json_encode([
+                'success' => false,
+                'message' => $response['data']['error'] ?? 'Patient not found'
+            ]);
+        }
+    }
+
+    public function updatePatient($patientId)
+    {
+        $patientModel = new Patient();
+        $updateData = json_decode(file_get_contents('php://input'), true);
+        error_log(intval($patientId));
+        error_log(print_r($updateData, true));
+
+        $response = $patientModel->updatePatient($patientId, $updateData);
+
+        header('Content-Type: application/json');
+
+        if ($response['status'] === 200) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Patient updated successfully',
+                'patient' => $response['data']
+            ]);
+        } else {
+            http_response_code($response['status']);
+            echo json_encode([
+                'success' => false,
+                'message' => $response['data']['error'] ?? 'Failed to update patient'
+            ]);
+        }
+    }
+
+    public function updatePatientView()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        // $staffModel = new Staff();
+        // $departments = $staffModel->getAllDepartments();
+
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $this->render('admin/updatePatientView');
+    }
+
+    public function broadcastNotificationToStaffView()
+    {
+        $this->requireLogin();
+        // Get user data from session
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user) {
+            $this->redirect('login');
+            return;
+        }
+
+        $staffModel = new Staff();
+        $staffs = $staffModel->getAllStaff();
+
+        $this->render('admin/broadcastNotificationForStaff', [
+            'staffs' => $staffs['data'][0]
+        ]);
+    }
+
+    public function broadcastNotificationToStaff()
+    {
+        try {
+            // Get JSON input
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            if (!$input) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid JSON input'
+                ]);
+                return;
+            }
+
+            // Validate required fields
+            if (empty($input['sourceSystem']) || empty($input['users']) || empty($input['message'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Missing required fields: sourceSystem, users, message'
+                ]);
+                return;
+            }
+
+            // Initialize Staff model
+            $staffModel = new Staff();
+
+            // Call the broadcast function
+            $response = $staffModel->broadcastNotificationToStaff(
+                $input['sourceSystem'],
+                $input['users'],
+                $input['message']
+            );
+
+            header('Content-Type: application/json');
+
+            if ($response['status'] === 200 || $response['status'] === 201) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Broadcast notification sent successfully',
+                    'data' => $response['data'],
+                    'totalUsers' => count($input['users']),
+                    'successfullyQueued' => $response['data']['successfullyQueued'] ?? count($input['users']),
+                    'failedToQueue' => $response['data']['failedToQueue'] ?? 0
+                ]);
+            } else {
+                http_response_code($response['status']);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $response['data']['error'] ?? 'Failed to send broadcast notification',
+                    'details' => $response['data']
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log('Broadcast notification error: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Internal server error: ' . $e->getMessage()
+            ]);
+        }
     }
 }

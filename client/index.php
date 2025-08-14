@@ -16,6 +16,7 @@ require_once 'src/controllers/ConsultationController.php';
 require_once 'src/controllers/LookupController.php';
 require_once 'src/controllers/AdminController.php';
 require_once 'src/controllers/DeskStaffController.php';
+require_once 'src/controllers/NotificationController.php';
 
 // Simple routing
 $request = $_SERVER['REQUEST_URI'];
@@ -71,8 +72,24 @@ switch ($pathParts[0]) {
         $controller->logout();
         break;
 
+    case 'notifications':
+        $controller = new NotificationController();
+        $controller->index();
+        break;
+
     case 'dashboard':
         $controller = new HomeController();
+        $user = $_SESSION['user'] ?? null;
+        if ($user['user_role'] == "lab_staff") {
+            $pharmarcyController = new LabController();
+            $pharmarcyController->index();
+            break;
+        }
+        if ($user['user_role'] == "pharmacist") {
+            $pharmarcyController = new PharmacyController();
+            $pharmarcyController->index();
+            break;
+        }
         $controller->dashboard();
         break;
 
@@ -194,11 +211,13 @@ switch ($pathParts[0]) {
             $controller->updateUsedService();
         } elseif (isset($pathParts[1]) && $pathParts[1] === 'used-services' && isset($pathParts[2]) && $pathParts[2] === 'paid' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->updateUsedServicePaidStatus();
-        } elseif (isset($pathParts[1], $pathParts[2]) &&
+        } elseif (
+            isset($pathParts[1], $pathParts[2]) &&
             $pathParts[1] === 'used-services' &&
-            $pathParts[2] === 'results') {
+            $pathParts[2] === 'results'
+        ) {
             $controller->downloadResultFile($pathParts[3]);
-        } elseif ( isset($pathParts[1]) && $pathParts[1] === 'view' && isset($pathParts[2]) && is_numeric($pathParts[2])) {
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'view' && isset($pathParts[2]) && is_numeric($pathParts[2])) {
             $controller->viewUsedService($pathParts[2]);
         } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && isset($pathParts[2]) && $pathParts[2] === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->createService();
@@ -208,7 +227,7 @@ switch ($pathParts[0]) {
             $controller->addServiceForm();
         } elseif (isset($pathParts[1]) && $pathParts[1] === 'services' && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
             $controller->searchService();
-        } else if (isset($pathParts[2]) && $pathParts[2] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        } else if (isset($pathParts[1]) && $pathParts[1] === 'search' && $_SERVER['REQUEST_METHOD'] === 'GET') {
             $controller->searchUsedServices();
         } else if (isset($pathParts[1]) && $pathParts[1] === 'addusedservice') {
             $controller->addUsedServiceForm();
@@ -244,8 +263,10 @@ switch ($pathParts[0]) {
             $controller->addMedicine();
         } elseif (isset($pathParts[1]) && $pathParts[1] === 'addmedicine') {
             $controller->addMedicineForm();
-        } elseif (isset($pathParts[1]) && $pathParts[1] === 'update-status' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->updateStatus();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'paidPrescription') {
+            $controller->paidPrescription();
+        } elseif (isset($pathParts[1]) && $pathParts[1] === 'handleMedicine') {
+            $controller->handleMedicine();
         } elseif (isset($pathParts[1]) && $pathParts[1] === 'updatemedicine') {
             $controller->updateMedicineForm();
         } elseif (
@@ -314,6 +335,63 @@ switch ($pathParts[0]) {
 
         if (isset($pathParts[1]) && $pathParts[1] === 'submitCreateStaff') {
             $controller->submitCreateStaff();
+            break;
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'viewAllStaff') {
+            $controller->viewAllStaff();
+            break;
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'viewAllDepartment') {
+            $controller->viewAllDepartment();
+            break;
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'viewAllPatient') {
+            $controller->viewAllPatient();
+            break;
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'findStaff') {
+            if (isset($pathParts[2])) {
+                $controller->getStaffById($pathParts[2]);
+                break;
+            }
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'updateStaff') {
+            if (isset($pathParts[2])) {
+                $controller->updateStaff($pathParts[2]);
+                break;
+            }
+            $controller->updateStaffView();
+            break;
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'findPatient') {
+            if (isset($pathParts[2])) {
+                $controller->getPatientById($pathParts[2]);
+                break;
+            }
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'updatePatient') {
+            if (isset($pathParts[2])) {
+                $controller->updatePatient($pathParts[2]);
+                break;
+            }
+            $controller->updatePatientView();
+            break;
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'broadcastNotificationForStaff') {
+            $controller->broadcastNotificationToStaffView();
+            break;
+        }
+
+        if (isset($pathParts[1]) && $pathParts[1] === 'broadcast-notification') {
+            $controller->broadcastNotificationToStaff();
             break;
         }
 

@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../../helper/url_parsing.php';
-echo '<pre>';
-print_r($patient);
-echo '</pre>';
+// echo '<pre>';
+// print_r($patient);
+// echo '</pre>';
 ob_start();
 
 // Extract patient data from the response structure
@@ -62,11 +62,11 @@ if ($patient && $patient['status'] === 200 && isset($patient['data'][0])) {
                                     <?php endif; ?>
                                 </p>
                             </div>
-                            <div class="col-md-3 text-end">
+                            <!-- <div class="col-md-3 text-end">
                                 <a href="<?php echo url('profile/edit'); ?>" class="btn btn-outline-primary">
                                     <i class="fas fa-edit"></i> Edit Profile
                                 </a>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>

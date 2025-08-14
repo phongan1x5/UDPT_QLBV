@@ -4,6 +4,8 @@ from datetime import datetime, time
 import models, schemas, database
 import httpx
 from typing import Optional
+from rabbitmq import publish_event
+from reminder import send_reminders
 
 router = APIRouter()
 
@@ -355,3 +357,38 @@ def get_slots_summary(doctor_id: int, date: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid date format.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/test-reminders")
+def test_appointment_reminders(db: Session = Depends(get_db)):
+    """Manual endpoint to test appointment reminder notifications"""
+    try:
+        send_reminders(db)
+        return {"status": "success", "message": "Reminder check completed"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending reminders: {str(e)}")
+
+@router.post("/test-notification/{appointment_id}")
+async def test_single_appointment_notification(appointment_id: int, db: Session = Depends(get_db)):
+    """Test notification for a single appointment"""
+    try:
+        appointment = db.query(models.Appointment).filter(
+            models.Appointment.MaLichHen == appointment_id
+        ).first()
+        
+        if not appointment:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        
+        # Create test notification
+        test_message = f"📅 TEST: Appointment reminder for appointment #{appointment_id} on {appointment.Ngay} at {appointment.Gio}"
+        payload = f"UserID:{appointment.MaBenhNhan}, UserEmail:phongan105@gmail.com, SourceSystem:Appointment, Message:{test_message}"
+        
+        success = publish_event("AppointmentReminder", payload)
+        
+        return {
+            "status": "success" if success else "failed",
+            "appointment_id": appointment_id,
+            "message": "Test notification sent" if success else "Failed to send notification"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")

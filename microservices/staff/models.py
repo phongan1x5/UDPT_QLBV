@@ -11,6 +11,7 @@ class Staff(Base):
     HoTen = Column(String, nullable=False)  # Full Name
     NgaySinh = Column(String, nullable=False)  # Date of Birth
     DiaChi = Column(String, nullable=False)  # Address
+    Email = Column(String, nullable=False)  # Address
     SoDienThoai = Column(String, nullable=False)  # Phone Number
     SoDinhDanh = Column(String, nullable=False) #CCCD
     LoaiNhanVien = Column(String, nullable=False)  # Staff Type

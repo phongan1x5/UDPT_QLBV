@@ -52,6 +52,18 @@ class Prescription
         return $this->callApi('/prescriptions?skip=' . $skip . '&limit=' . $limit, 'GET', null, $headers);
     }
 
+    public function getAllPrescriptionsWithMedicines($skip = 0, $limit = 1000)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = ['Authorization: Bearer ' . $token];
+        return $this->callApi('/prescriptions/with-medicines', 'GET', null, $headers);
+    }
+
     public function getPrescriptionById($prescriptionId)
     {
         $token = $_SESSION['user']['token'] ?? null;
@@ -113,6 +125,18 @@ class Prescription
         return $this->callApi('/prescriptions/' . $prescriptionId . '/status', 'PUT', $data, $headers);
     }
 
+    public function handleMedicinePrescription($prescriptionId)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = ['Authorization: Bearer ' . $token];
+        return $this->callApi('/prescriptions/handleMedicinePrescription/' . $prescriptionId, 'POST', null, $headers);
+    }
+
     // Medicine methods
     public function getAllMedicines($skip = 0, $limit = 100)
     {
@@ -154,7 +178,8 @@ class Prescription
         return $this->callApi('/medicines', 'POST', $medicineData, $headers);
     }
 
-    public function getReport($year){
+    public function getReport($year)
+    {
         $token = $_SESSION['user']['token'] ?? null;
 
         if (!$token) {
@@ -180,6 +205,5 @@ class Prescription
 
 
         return $this->callApi('/medicines/' . $medicineId, 'PUT', $medicineData, $headers);
-
     }
 }

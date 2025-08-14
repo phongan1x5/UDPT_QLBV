@@ -139,8 +139,8 @@ ob_start();
                                                 ?>
                                             </td>
                                             <td>
-                                                <?php if (!empty($appointment['LyDo'])): ?>
-                                                    <?php echo htmlspecialchars($appointment['LyDo']); ?>
+                                                <?php if (!empty($appointment['LoaiLichHen'])): ?>
+                                                    <?php echo htmlspecialchars($appointment['LoaiLichHen']); ?>
                                                 <?php else: ?>
                                                     <span class="text-muted">No reason provided</span>
                                                 <?php endif; ?>
@@ -167,10 +167,10 @@ ob_start();
                                                         <i class="fas fa-times"></i> Cancel
                                                     </button>
                                                 <?php endif; ?>
-                                                <a href="/appointments/view/<?php echo $appointment['MaLichHen']; ?>"
+                                                <!-- <a href="/appointments/view/<?php echo $appointment['MaLichHen']; ?>"
                                                     class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye"></i> View
-                                                </a>
+                                                </a> -->
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

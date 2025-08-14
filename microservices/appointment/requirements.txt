@@ -6,3 +6,4 @@ pika
 apscheduler
 httpx
 python-dotenv
+requests

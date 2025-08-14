@@ -87,15 +87,15 @@ echo '</pre>';
                             </a>
                         </div>
                         <div class="col-md-6">
-                            <a href="#" class="btn btn-outline-primary w-100 mb-2">
+                            <a href="<?php echo url('admin/viewAllStaff'); ?>" class="btn btn-outline-primary w-100 mb-2">
                                 <i class="fas fa-list"></i><br>
                                 <small>View All Staff</small>
                             </a>
                         </div>
                         <div class="col-md-6">
-                            <a href="#" class="btn btn-outline-secondary w-100 mb-2">
-                                <i class="fas fa-user-md"></i><br>
-                                <small>Manage Doctors</small>
+                            <a href="<?php echo url('admin/updateStaff'); ?>" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="fas fa-file"></i><br>
+                                <small>Update Staff</small>
                             </a>
                         </div>
                         <div class="col-md-6">
@@ -136,15 +136,15 @@ echo '</pre>';
                             </a>
                         </div>
                         <div class="col-md-6">
-                            <a href="#" class="btn btn-outline-success w-100 mb-2">
+                            <a href="<?php echo url('admin/viewAllPatient'); ?>" class="btn btn-outline-success w-100 mb-2">
                                 <i class="fas fa-search"></i><br>
-                                <small>Search Patients</small>
+                                <small>View All Patients</small>
                             </a>
                         </div>
                         <div class="col-md-6">
-                            <a href="#" class="btn btn-outline-primary w-100 mb-2">
+                            <a href="<?php echo url('admin/updatePatient'); ?>" class="btn btn-outline-primary w-100 mb-2">
                                 <i class="fas fa-file-medical"></i><br>
-                                <small>Medical Records</small>
+                                <small>Update Patient</small>
                             </a>
                         </div>
                         <div class="col-md-6">
@@ -179,13 +179,13 @@ echo '</pre>';
                 <div class="card-body">
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <a href="#" class="btn btn-outline-info w-100 mb-2">
+                            <a href="<?php echo url('admin/createDepartment'); ?>" class="btn btn-outline-info w-100 mb-2">
                                 <i class="fas fa-plus-circle"></i><br>
                                 <small>Add Department</small>
                             </a>
                         </div>
                         <div class="col-md-6">
-                            <a href="#" class="btn btn-outline-info w-100 mb-2">
+                            <a href="<?php echo url('admin/viewAllDepartment'); ?>" class="btn btn-outline-info w-100 mb-2">
                                 <i class="fas fa-list-alt"></i><br>
                                 <small>Manage Departments</small>
                             </a>
@@ -332,9 +332,9 @@ echo '</pre>';
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="#" class="btn btn-warning w-100">
+                            <a href="<?php echo url('admin/broadcastNotificationForStaff'); ?>" class="btn btn-warning w-100">
                                 <i class="fas fa-broadcast-tower"></i><br>
-                                <small>System Announce</small>
+                                <small>System Broadcast</small>
                             </a>
                         </div>
                         <div class="col-md-2">

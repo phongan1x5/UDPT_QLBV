@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
-echo '<pre>';
-print_r("appointmentId: " . $appointmentId);
-echo '</pre>';
+// echo '<pre>';
+// print_r("appointmentId: " . $appointmentId);
+// echo '</pre>';
 $hasPendingLabServices = false;
 foreach ($currentLabServices as $service) {
     if (empty($service['KetQua'])) {
@@ -195,7 +195,18 @@ foreach ($currentLabServices as $service) {
                             <div class="mb-3">
                                 <label for="diagnosis" class="form-label"><strong>Diagnosis *</strong></label>
                                 <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3"
-                                    placeholder="Enter diagnosis..." required><?php echo htmlspecialchars($medicalRecord['MedicalRecord']['ChanDoan'] ?? ''); ?></textarea>
+                                    placeholder="Enter diagnosis..." required><?php
+                                                                                // ✅ Handle template diagnosis - don't show "@Pending examination" to doctor
+                                                                                $currentDiagnosis = $medicalRecord['MedicalRecord']['ChanDoan'] ?? '';
+                                                                                if ($currentDiagnosis === '@Pending examination') {
+                                                                                    echo ''; // Show empty field if it's the template
+                                                                                } else {
+                                                                                    echo htmlspecialchars($currentDiagnosis);
+                                                                                }
+                                                                                ?></textarea>
+                                <div class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> The "@" character is not allowed in diagnosis.
+                                </div>
                             </div>
 
                             <div class="mb-3">

@@ -14,3 +14,19 @@ class Patient(Base):
     DiaChi = Column(String, nullable=False)
     BaoHiemYTe = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+
+    def masked(self):
+        return {
+            "id": self.id,
+            "HoTen": self.HoTen,
+            "NgaySinh": self.NgaySinh,
+            "GioiTinh": self.GioiTinh,
+            "SoDienThoai": "***masked***",
+            "SoDinhDanh": "***masked***",
+            "Email": "***masked***",
+            "DiaChi": self.DiaChi,
+            "BaoHiemYTe": self.BaoHiemYTe,
+            "is_active": self.is_active,
+        }
+
+

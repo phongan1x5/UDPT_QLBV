@@ -5,15 +5,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 RABBITMQ_CONFIG = {
-    'host': os.getenv('RABBITMQ_HOST', 'localhost'),
-    'port': int(os.getenv('RABBITMQ_PORT', 5672)),
-    'user': os.getenv('RABBITMQ_USER', 'guest'),
-    'password': os.getenv('RABBITMQ_PASSWORD', 'guest'),
+    'host': 'hospital_rabbitmq',
+    'port': 5672,
+    'user': "guest",
+    'password': "guest"
 }
 
 EMAIL_CONFIG = {
-    'smtp_server': os.getenv('EMAIL_SMTP_SERVER', 'smtp.example.com'),
-    'smtp_port': int(os.getenv('EMAIL_SMTP_PORT', 587)),
-    'username': os.getenv('EMAIL_USERNAME', 'your_email@example.com'),
-    'password': os.getenv('EMAIL_PASSWORD', 'your_password'),
+    'smtp_server': 'smtp.gmail.com',
+    'smtp_port':  587,
+    'username': "hospitalnotificationudpt@gmail.com",  # Replace with your test Gmail
+    'password': "luai udty rmga lfun",  # Replace with your App Password
+    'use_tls': True,  # Gmail requires TLS
+    'from_name': 'Hospital Notification System'  # Friendly sender name
 }

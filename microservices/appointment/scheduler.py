@@ -13,6 +13,6 @@ def start_scheduler():
         finally:
             db.close()
 
-    # Schedule the reminder job to run every 15 minutes
-    scheduler.add_job(reminder_job, 'interval', minutes=60)
+    # Schedule the reminder job to run every 720 minutes = 12 hours
+    scheduler.add_job(reminder_job, 'interval', minutes=720)
     scheduler.start()

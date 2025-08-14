@@ -6,3 +6,4 @@ pydantic
 python-multipart
 pika
 python-dotenv
+requests

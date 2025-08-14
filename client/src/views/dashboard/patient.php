@@ -42,9 +42,6 @@ echo '</pre>';
                     <h5 class="mb-0">
                         <i class="fas fa-calendar-check"></i> My Appointments
                     </h5>
-                    <a href="/appointments" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-eye"></i> View All
-                    </a>
                 </div>
                 <div class="card-body">
                     <?php
@@ -150,7 +147,7 @@ echo '</pre>';
                         <?php if (count($appointments['data'][0]) > 5): ?>
                             <div class="text-center mt-3">
                                 <p class="text-muted">Showing 5 of <?php echo count($appointments['data'][0]); ?> appointments</p>
-                                <a href="/appointments" class="btn btn-primary">
+                                <a href="<?php echo url('appointments'); ?>" class="btn btn-primary">
                                     <i class="fas fa-calendar-alt"></i> View All Appointments
                                 </a>
                             </div>

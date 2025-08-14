@@ -86,7 +86,6 @@ class Staff
             ];
         }
 
-        // Extract the actual patient ID from the auth ID
         $staffId = $this->extractStaffId($userAuthId);
 
         if (!$staffId) {
@@ -125,6 +124,28 @@ class Staff
         return $this->callApi('/staff', 'POST', $staffData, $headers);
     }
 
+    public function getAllStaff()
+    {
+        // Get user token from session for authentication
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        // Add Authorization header
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        // Call the API Gateway route: GET /patients/{patient_id}
+        $response = $this->callApi('/staff', 'GET', null, $headers);
+
+        return $response;
+    }
 
     public function createDepartment($departmentData)
     {
@@ -161,5 +182,93 @@ class Staff
         ];
 
         return $this->callApi('/departments', 'GET', null, $headers);
+    }
+
+    public function updateStaff($staffId, $staffData)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        // Call the API Gateway route: PUT /staff/{staff_id}
+        return $this->callApi('/staff/' . $staffId, 'PUT', $staffData, $headers);
+    }
+
+    public function getStaffByIdDirect($staffId)
+    {
+        // Get staff by direct ID (not auth ID format)
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        return $this->callApi('/staff/' . $staffId, 'GET', null, $headers);
+    }
+
+    public function broadcastNotificationToStaff($sourceSystem, $users, $message)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        // Send individual notifications using existing endpoint
+        $results = [];
+        $successful = 0;
+        $failed = 0;
+
+        foreach ($users as $user) {
+            $notificationData = [
+                'userId' => $user['userId'],
+                'userEmail' => $user['userEmail'],
+                'sourceSystem' => $sourceSystem,
+                'message' => $message
+            ];
+
+            $response = $this->callApi('/send-email-and-store', 'POST', $notificationData, $headers);
+
+            if ($response['status'] >= 200 && $response['status'] < 300) {
+                $successful++;
+            } else {
+                $failed++;
+            }
+
+            $results[] = $response;
+        }
+
+        return [
+            'status' => 200,
+            'data' => [
+                'successfullyQueued' => $successful,
+                'failedToQueue' => $failed,
+                'total' => count($users),
+                'details' => $results
+            ]
+        ];
     }
 }

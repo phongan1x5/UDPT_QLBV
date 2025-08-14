@@ -38,7 +38,7 @@
                             </a>
                         </li>
 
-                        <?php if ($_SESSION['user']['user_role'] === 'admin' || $_SESSION['user']['user_role'] === 'doctor'): ?>
+                        <!-- <?php if ($_SESSION['user']['user_role'] === 'admin' || $_SESSION['user']['user_role'] === 'doctor'): ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="patientsDropdown" role="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-users"></i> Patients
@@ -135,7 +135,7 @@
                                         </a></li>
                                 </ul>
                             </li>
-                        <?php endif; ?>
+                        <?php endif; ?> -->
                     </ul>
 
                     <ul class="navbar-nav">
@@ -153,7 +153,7 @@
                                     </a></li>
                                 <li><a class="dropdown-item" href="<?php echo url('notifications'); ?>">
                                         <i class="fas fa-bell"></i> Notifications
-                                        <span class="badge bg-danger ms-1">3</span>
+                                        <!-- <span class="badge bg-danger ms-1">3</span> -->
                                     </a></li>
                                 <li>
                                     <hr class="dropdown-divider">

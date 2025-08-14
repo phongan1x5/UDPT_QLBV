@@ -100,31 +100,31 @@ if (!empty($labServices)) {
                                                     </small>
                                                 </div>
 
-<?php if ($serviceInfo): ?>
-    <div class="mb-3">
-        <small class="text-muted">
-            <i class="fas fa-info-circle"></i>
-            <strong>Service:</strong> <?php echo htmlspecialchars($serviceInfo['NoiDungDichVu']); ?>
-            <br>
-            <i class="fas fa-dollar-sign"></i>
-            <strong>Cost:</strong> $<?php echo number_format($serviceInfo['DonGia'], 2); ?>
-            <br>
-            <i class="fas fa-receipt"></i>
-            <strong>Paid Status:</strong>
-            <?php
-              $status = strtolower($labService['TrangThai'] ?? 'unknown');
-              $statusBadge = [
-                  'paid' => 'success',
-                  'unpaid' => 'danger',
-                  'pending' => 'warning'
-              ][$status] ?? 'secondary';
-            ?>
-            <span class="badge bg-<?= $statusBadge ?>">
-              <?= ucfirst($status) ?>
-            </span>
-        </small>
-    </div>
-<?php endif; ?>
+                                                <?php if ($serviceInfo): ?>
+                                                    <div class="mb-3">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-info-circle"></i>
+                                                            <strong>Service:</strong> <?php echo htmlspecialchars($serviceInfo['NoiDungDichVu']); ?>
+                                                            <br>
+                                                            <i class="fas fa-dollar-sign"></i>
+                                                            <strong>Cost:</strong> $<?php echo number_format($serviceInfo['DonGia'], 2); ?>
+                                                            <br>
+                                                            <i class="fas fa-receipt"></i>
+                                                            <strong>Paid Status:</strong>
+                                                            <?php
+                                                            $status = strtolower($labService['TrangThai'] ?? 'unknown');
+                                                            $statusBadge = [
+                                                                'paid' => 'success',
+                                                                'unpaid' => 'danger',
+                                                                'pending' => 'warning'
+                                                            ][$status] ?? 'secondary';
+                                                            ?>
+                                                            <span class="badge bg-<?= $statusBadge ?>">
+                                                                <?= ucfirst($status) ?>
+                                                            </span>
+                                                        </small>
+                                                    </div>
+                                                <?php endif; ?>
 
 
                                                 <div class="service-details">
@@ -154,7 +154,7 @@ if (!empty($labServices)) {
 
                                                     <?php if (!empty($labService['FileKetQua'])): ?>
 
-                                                        <a href="<?php echo url('/labResults/download/' . $labService['MaDVSD']); ?>"
+                                                        <a href="<?php echo url('labResults/download/' . $labService['MaDVSD']); ?>"
                                                             class="btn btn-outline-success btn-sm">
                                                             <i class="fas fa-download"></i> Download Result
                                                         </a>
@@ -340,7 +340,7 @@ if (!empty($labServices)) {
                         <i class="fas fa-microscope fa-4x text-muted mb-4"></i>
                         <h4 class="text-muted">No Lab Services Found</h4>
                         <p class="text-muted">You don't have any lab services yet. They will appear here after your doctor orders lab tests.</p>
-                        <a href="/appointments" class="btn btn-primary">
+                        <a href="<?php echo url('appointments'); ?>" class="btn btn-primary">
                             <i class="fas fa-calendar-plus"></i> Book Appointment
                         </a>
                     </div>

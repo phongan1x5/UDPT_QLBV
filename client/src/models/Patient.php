@@ -58,6 +58,29 @@ class Patient
         ];
     }
 
+    public function getAllPatients()
+    {
+        // Get user token from session for authentication
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        // Add Authorization header
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        // Call the API Gateway route: GET /patients/{patient_id}
+        $response = $this->callApi('/patients', 'GET', null, $headers);
+
+        return $response;
+    }
+
     public function getPatientById($userAuthId)
     {
         // Get user token from session for authentication
@@ -87,6 +110,39 @@ class Patient
 
         // Call the API Gateway route: GET /patients/{patient_id}
         $response = $this->callApi('/patients/' . $patientId, 'GET', null, $headers);
+
+        return $response;
+    }
+
+    public function getPatientByIdForDoctor($userAuthId)
+    {
+        // Get user token from session for authentication
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return [
+                'status' => 401,
+                'data' => ['error' => 'Authentication required']
+            ];
+        }
+
+        // Extract the actual patient ID from the auth ID
+        $patientId = $this->extractPatientId($userAuthId);
+
+        if (!$patientId) {
+            return [
+                'status' => 400,
+                'data' => ['error' => 'Invalid patient ID format']
+            ];
+        }
+
+        // Add Authorization header
+        $headers = [
+            'Authorization: Bearer ' . $token
+        ];
+
+        // Call the API Gateway route: GET /patients/{patient_id}
+        $response = $this->callApi('/patients/forDoctor/' . $patientId, 'GET', null, $headers);
 
         return $response;
     }
@@ -153,26 +209,14 @@ class Patient
         return $response;
     }
 
-    // public function getAllPatients($skip = 0, $limit = 100)
-    // {
-    //     // Note: There's no GET /patients route in your API Gateway
-    //     // You might need to add this route or use a different endpoint
-    //     $token = $_SESSION['user']['token'] ?? null;
+    public function updatePatient($patientId, $patientData)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
 
-    //     if (!$token) {
-    //         return [
-    //             'status' => 401,
-    //             'data' => ['error' => 'Authentication required']
-    //         ];
-    //     }
-
-    //     $headers = [
-    //         'Authorization: Bearer ' . $token
-    //     ];
-
-    //     // This route doesn't exist yet - you'd need to add it to API Gateway
-    //     $response = $this->callApi('/patients?skip=' . $skip . '&limit=' . $limit, 'GET', null, $headers);
-
-    //     return $response;
-    // }
+        $headers = ['Authorization: Bearer ' . $token];
+        return $this->callApi('/patients/' . $patientId, 'PUT', $patientData, $headers);
+    }
 }

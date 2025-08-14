@@ -1,4 +1,7 @@
-<?php ob_start(); ?>
+<?php
+require_once __DIR__ . '/../../helper/url_parsing.php';
+ob_start();
+?>
 
 <div class="container mt-4">
   <h2 class="mb-4"><i class="fas fa-hospital-user"></i> Admin Lab</h2>
@@ -16,7 +19,7 @@
   <div class="tab-content" id="staffTabContent">
     <!-- Panel 1: Services -->
     <div class="tab-pane fade show active" id="services-panel" role="tabpanel">
-      <form method="GET" action="/lab/services/search" class="d-flex justify-content-center align-items-center gap-3 mb-4">
+      <form method="GET" action="<?php echo url('/lab/services/search'); ?>" class="d-flex justify-content-center align-items-center gap-3 mb-4">
         <input type="text" name="query" class="form-control w-50" placeholder="🔍 Search by Service ID..." />
         <button type="submit" class="btn btn-primary px-4">Search</button>
       </form>
@@ -51,7 +54,7 @@
 
     <!-- Panel 2: Used Services -->
     <div class="tab-pane fade" id="used-panel" role="tabpanel">
-      <form method="GET" action="/lab/used-services/search#used-panel" class="d-flex justify-content-center align-items-center gap-3 mb-4">
+      <form method="GET" action="<?php echo url('lab/used-services/search#used-panel'); ?>" class="d-flex justify-content-center align-items-center gap-3 mb-4">
         <input type="text" name="medicalRecordId" class="form-control w-50" placeholder="🔍 Search by Medical Record ID..." />
         <button type="submit" class="btn btn-primary px-4">Search</button>
       </form>
@@ -77,13 +80,13 @@
                   <td><?= htmlspecialchars($us['TenDichVu'] ?? '-') ?></td>
                   <td><?= $us['MaGiayKhamBenh'] ?></td>
                   <td><?= date('Y-m-d H:i', strtotime($us['ThoiGian'])) ?></td>
-                    <td>
-    <?php if (!empty($us['TrangThai']) && $us['TrangThai'] === 'DaThuTien'): ?>
-      <span class="badge bg-success">Paid</span>
-    <?php else: ?>
-      <span class="badge bg-danger">Unpaid</span>
-    <?php endif; ?>
-  </td>
+                  <td>
+                    <?php if (!empty($us['TrangThai']) && $us['TrangThai'] === 'DaThuTien'): ?>
+                      <span class="badge bg-success">Paid</span>
+                    <?php else: ?>
+                      <span class="badge bg-danger">Unpaid</span>
+                    <?php endif; ?>
+                  </td>
 
                   <td>
                     <?php if (!empty($us['KetQua'])): ?>
@@ -95,7 +98,7 @@
                   <td>
                     <?php if (!empty($us['FileKetQua'])): ?>
                       <?php $filePath = rawurlencode($us['FileKetQua']); ?>
-                      <a href="/lab/used-services/results/<?= $filePath ?>" target="_blank">
+                      <a href="<?php echo url('lab/used-services/results/' . $filePath); ?>" target="_blank">
                         📄 View PDF
                       </a>
                     <?php else: ?>

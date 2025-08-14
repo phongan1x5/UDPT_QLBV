@@ -76,16 +76,17 @@ def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)
 
     return db_patient
 
-@router.get("/patients", response_model=List[schemas.PatientResponse])
+@router.get("/patients", response_model=List[schemas.MaskedPatientResponse])
 def list_patients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return db.query(models.Patient).offset(skip).limit(limit).all()
+    patients = db.query(models.Patient).offset(skip).limit(limit).all()
+    return [patient.masked() for patient in patients]
 
 @router.get("/patients/by_phone/{patient_phone}", response_model=schemas.PatientResponse)
 def get_patient_by_phone(patient_phone: str, db: Session = Depends(get_db)):
     patient = db.query(models.Patient).filter(models.Patient.SoDienThoai == patient_phone).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return patient
+    return patient.masked()
 
 @router.get("/patients/{patient_id}", response_model=schemas.PatientResponse)
 def get_patient(patient_id: int, db: Session = Depends(get_db)):
@@ -93,6 +94,13 @@ def get_patient(patient_id: int, db: Session = Depends(get_db)):
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return patient
+
+@router.get("/patients/forDoctor/{patient_id}", response_model=schemas.MaskedPatientResponse)
+def get_patient_for_doctor(patient_id: int, db: Session = Depends(get_db)):
+    patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return patient.masked()
 
 
 @router.put("/patients/{patient_id}", response_model=schemas.PatientResponse)

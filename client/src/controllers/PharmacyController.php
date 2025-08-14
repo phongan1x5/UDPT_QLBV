@@ -25,14 +25,14 @@ class PharmacyController extends BaseController
 
         // Handle different roles
         switch ($user['user_role']) {
-            case 'staff':
+            case 'pharmacist':
                 $this->staffPharmacys($user);
                 break;
             case 'doctor':
                 $this->doctorPharmacys($user);
                 break;
             case 'admin':
-                $this->adminPharmacys($user);   
+                $this->adminPharmacys($user);
                 break;
             default:
                 $this->staffPharmacys($user);
@@ -41,15 +41,15 @@ class PharmacyController extends BaseController
     }
     private function staffPharmacys($user)
     {
-  
+
         // echo '<pre>';
         // print_r($allPharmacys);
         // echo '</pre>';
         // exit();
-        $response1 = $this->PharmacyModel->getAllPrescriptions(); // or getPrescriptionById(), etc.
+        $response1 = $this->PharmacyModel->getAllPrescriptionsWithMedicines(); // or getPrescriptionById(), etc.
 
         $prescriptions = [];
-        
+
         if ($response1['status'] === 200 && isset($response1['data'][0])) {
             $prescriptions = $response1['data'][0];
         }
@@ -62,16 +62,16 @@ class PharmacyController extends BaseController
 
         $this->render('pharmacy/staff', [
             'user' => $user,
-            'prescriptions' => $prescriptions,
+            'prescriptions' => $prescriptions['data'],
             'medicines' => $medicines
         ]);
     }
     private function doctorPharmacys($user)
     {
-        $response1 = $this->PharmacyModel->getAllPrescriptions(); 
+        $response1 = $this->PharmacyModel->getAllPrescriptions();
 
         $prescriptions = [];
-        
+
         if ($response1['status'] === 200 && isset($response1['data'][0])) {
             $prescriptions = $response1['data'][0];
         }
@@ -91,10 +91,10 @@ class PharmacyController extends BaseController
 
     private function adminPharmacys($user)
     {
-        $response1 = $this->PharmacyModel->getAllPrescriptions(); 
+        $response1 = $this->PharmacyModel->getAllPrescriptions();
 
         $prescriptions = [];
-        
+
         if ($response1['status'] === 200 && isset($response1['data'][0])) {
             $prescriptions = $response1['data'][0];
         }
@@ -168,7 +168,7 @@ class PharmacyController extends BaseController
 
         $pharmacyId = $_POST['MaToaThuoc'] ?? null;
 
-        $status = isset($_POST['TrangThai']) ? 'Đã phát' : 'Chưa phát';
+        $status = isset($_POST['TrangThai']);
 
         if (!$pharmacyId) {
             $this->redirect('pharmacy/staff');
@@ -176,6 +176,51 @@ class PharmacyController extends BaseController
         }
 
         $result = $this->PharmacyModel->updatePrescriptionStatus($pharmacyId, $status);
+
+        $this->redirect('pharmacy/staff');
+    }
+
+    public function paidPrescription()
+    {
+        $this->requireLogin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('pharmacy/staff');
+            return;
+        }
+
+        $pharmacyId = $_POST['MaToaThuoc'] ?? null;
+        $status = $_POST['TrangThaiToaThuoc'];
+
+        if (!$pharmacyId) {
+            $this->redirect('pharmacy/staff');
+            return;
+        }
+
+        $result = $this->PharmacyModel->updatePrescriptionStatus($pharmacyId, $status);
+
+        $this->redirect('pharmacy/staff');
+    }
+
+    public function handleMedicine()
+    {
+        $this->requireLogin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('pharmacy/staff');
+            return;
+        }
+
+        $pharmacyId = $_POST['MaToaThuoc'] ?? null;
+        $status = "Completed";
+
+        if (!$pharmacyId) {
+            $this->redirect('pharmacy/staff');
+            return;
+        }
+
+        $result = $this->PharmacyModel->updatePrescriptionStatus($pharmacyId, $status);
+        $handle_result = $this->PharmacyModel->handleMedicinePrescription($pharmacyId);
 
         $this->redirect('pharmacy/staff');
     }
@@ -228,7 +273,7 @@ class PharmacyController extends BaseController
         $response = $this->PharmacyModel->createMedicine($medicineData);
 
         if ($response['status'] === 200 || $response['status'] === 201) {
-            header('Location: /pharmacy/staff');
+            $this->redirect("pharmacy");
             exit();
         } else {
             echo "Failed to create medicine.";

@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
-echo '<pre>';
-print_r($medicalRecords);
-echo '</pre>';
+// echo '<pre>';
+// print_r($medicalRecords);
+// echo '</pre>';
 ?>
 
 <div class="container-fluid">

@@ -71,7 +71,7 @@ class AppointmentController extends BaseController
 
         $this->render('appointments/patient', [
             'user' => $user,
-            'appointments' => $appointments[0],
+            'appointments' => $appointments[0] ?? [],
             'upcomingAppointments' => $upcomingAppointments
         ]);
     }

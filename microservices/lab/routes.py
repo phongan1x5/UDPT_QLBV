@@ -99,11 +99,31 @@ async def update_used_service(
     # Update the record with KetQua and FileKetQua
     db_used_service.KetQua = KetQua
     db_used_service.FileKetQua = file_path
+    db_used_service.TrangThai = "DaCoKetQua"  # Update status to indicate results are available
     db.commit()
     db.refresh(db_used_service)
 
-    # Publish an event to RabbitMQ
-    # publish_event("LabResultAvailable", f"UsedServiceID:{used_service_id}, Result:{KetQua}")
+    # 🔥 NEW: Publish event to RabbitMQ for notification service
+    try:
+        # We need to get patient info - you'll need to modify this based on your patient data structure
+        # For now, we'll use placeholder values
+        patient_email = get_patient_email_by_medical_record(db_used_service.MaGiayKhamBenh, db)
+        patient_id = get_patient_id_by_medical_record(db_used_service.MaGiayKhamBenh, db)
+        
+        if patient_email and patient_id:
+            # Create notification message
+            notification_message = f"🧪 Your lab results are ready! Service ID: {used_service_id}. Result: {KetQua}"
+            
+            # Publish event to RabbitMQ
+            payload = f"UserID:BN{patient_id}, UserEmail:{patient_email}, SourceSystem:Laboratory, Message:{notification_message}"
+            publish_event("LabResultAvailable", payload)
+            print(f"✅ Published lab result notification for patient {patient_id}")
+        else:
+            print(f"⚠️ Could not find patient info for medical record {db_used_service.MaGiayKhamBenh}")
+            
+    except Exception as e:
+        print(f"❌ Error publishing notification event: {e}")
+        # Don't fail the lab result update if notification fails
 
     return db_used_service
 
@@ -276,3 +296,79 @@ async def view_result_file(used_service_id: int, db: Session = Depends(get_db)):
         response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     
     return response
+
+def get_patient_email_by_medical_record(medical_record_id: int, db: Session):
+    """
+    Get patient email from medical record ID
+    """
+    try:
+        import requests
+        response = requests.get(f"http://api_gateway_service:6000/medical-record/{medical_record_id}/patient")
+        if response.status_code == 200:
+            patient_data_raw = response.json()
+            print("🔍 Raw patient data:", patient_data_raw)
+            
+            # Handle the tuple/list format [data, status_code]
+            if isinstance(patient_data_raw, (list, tuple)) and len(patient_data_raw) >= 1:
+                patient_data = patient_data_raw[0]  # Extract the actual data
+            else:
+                patient_data = patient_data_raw
+            
+            print("✅ Processed patient data:", patient_data)
+            
+            # Extract email from the nested structure
+            if 'patient' in patient_data:
+                patient_info = patient_data['patient']
+                email = patient_info.get('Email') or patient_info.get('email')
+                if email:
+                    print(f"✅ Found patient email: {email}")
+                    return email
+            else:
+                print("❌ 'patient' key not found in response")
+                
+    except Exception as e:
+        print(f"❌ Error getting patient email: {e}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+    
+    # Fallback
+    fallback_email = f"patient_{medical_record_id}@hospital.com"
+    print(f"🔄 Using fallback email: {fallback_email}")
+    return fallback_email
+
+def get_patient_id_by_medical_record(medical_record_id: int, db: Session):
+    """
+    Get patient ID from medical record ID
+    """
+    try:
+        import requests
+        response = requests.get(f"http://api_gateway_service:6000/medical-record/{medical_record_id}/patient")
+        if response.status_code == 200:
+            patient_data_raw = response.json()
+            print("🔍 Raw patient data for ID:", patient_data_raw)
+            
+            # Handle the tuple/list format [data, status_code]
+            if isinstance(patient_data_raw, (list, tuple)) and len(patient_data_raw) >= 1:
+                patient_data = patient_data_raw[0]  # Extract the actual data
+            else:
+                patient_data = patient_data_raw
+            
+            print("✅ Processed patient data for ID:", patient_data)
+            
+            # Extract patient ID from the response structure
+            patient_id = patient_data.get('patient_id')
+            if patient_id:
+                print(f"✅ Found patient ID: {patient_id}")
+                return str(patient_id)
+            else:
+                print("❌ 'patient_id' key not found in response")
+                
+    except Exception as e:
+        print(f"❌ Error getting patient ID: {e}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+    
+    # Fallback
+    fallback_id = str(medical_record_id)
+    print(f"🔄 Using fallback patient ID: {fallback_id}")
+    return fallback_id

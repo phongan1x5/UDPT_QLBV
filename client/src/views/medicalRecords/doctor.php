@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
-echo '<pre>';
-print_r($patient);
-print_r($medicalHistory['data'][0]['MedicalProfile']['MaHSBA']);
-echo '</pre>';
+// echo '<pre>';
+// print_r($patient);
+// print_r($medicalHistory['data'][0]['MedicalProfile']['MaHSBA']);
+// echo '</pre>';
 ?>
 
 <div class="container-fluid">

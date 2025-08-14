@@ -6,6 +6,7 @@ class StaffBase(BaseModel):
     HoTen: str  # Full Name
     NgaySinh: str  # Date of Birth
     DiaChi: str  # Address
+    Email: str
     SoDienThoai: str  # Phone Number
     SoDinhDanh: str #CCCD
     LoaiNhanVien: str  # Staff Type
@@ -18,6 +19,7 @@ class StaffUpdate(BaseModel):
     HoTen: Optional[str] = None  # Full Name
     NgaySinh: Optional[str] = None  # Date of Birth
     DiaChi: Optional[str] = None  # Address
+    Email: Optional[str] = None  
     SoDienThoai: Optional[str] = None  # Phone Number
     SoDinhDanh: str #CCCD
     LoaiNhanVien: Optional[str] = None  # Staff Type

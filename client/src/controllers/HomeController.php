@@ -104,6 +104,28 @@ class HomeController extends BaseController
         ]);
     }
 
+    private function labStaffDashboard($user)
+    {
+        $staffModel = new Staff();
+        $staff = $staffModel->getStaffById($user['user_id']);
+
+        $this->render('lab/staff', [
+            'user' => $user,
+            'staff' => $staff['data'][0]
+        ]);
+    }
+
+    private function pharmacistDashboard($user)
+    {
+        $staffModel = new Staff();
+        $staff = $staffModel->getStaffById($user['user_id']);
+
+        $this->render('pharmacy/staff', [
+            'user' => $user,
+            'staff' => $staff['data'][0]
+        ]);
+    }
+
     public function dashboard()
     {
         $this->requireLogin();
@@ -131,6 +153,13 @@ class HomeController extends BaseController
                 break;
             case 'desk_staff':
                 $this->deskStaffDashboard($user);
+                break;
+            case "lab_staff":
+                $this->labStaffDashboard($user);
+                break;
+            case "pharmacist":
+                $this->pharmacistDashboard($user);
+                break;
             default:
                 $this->render('dashboard', ['user' => $user]);
                 break;

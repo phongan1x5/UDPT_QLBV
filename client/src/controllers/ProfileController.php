@@ -1,6 +1,7 @@
 <?php
 require_once 'BaseController.php';
 require_once __DIR__ . '/../models/Patient.php';
+require_once __DIR__ . '/../models/Staff.php';
 
 class ProfileController extends BaseController
 {
@@ -11,6 +12,15 @@ class ProfileController extends BaseController
 
         $this->render('profile/patient', ['patient' => $patient]);
     }
+
+    private function staffProfile($user)
+    {
+        $staffModel = new Staff();
+        $staff = $staffModel->getStaffById($user['user_id']);
+
+        $this->render('profile/staff', ['staff' => $staff]);
+    }
+
     public function profile()
     {
         $this->requireLogin();
@@ -19,6 +29,8 @@ class ProfileController extends BaseController
         $user = $_SESSION['user'] ?? null;
         if ($user['user_role'] == 'patient') {
             $this->patientProfile($user);
+        } else {
+            $this->staffProfile($user);
         }
     }
 }

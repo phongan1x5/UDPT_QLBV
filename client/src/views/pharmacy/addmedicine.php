@@ -1,9 +1,12 @@
-<?php ob_start(); ?>
+<?php
+require_once __DIR__ . '/../../helper/url_parsing.php';
+ob_start();
+?>
 
 <div class="container mt-5">
     <h2><i class="fas fa-capsules"></i> ➕ Add New Medicine</h2>
 
-    <form method="POST" action="/pharmacy/medicine/create" class="card p-4 mt-4 shadow-sm">
+    <form method="POST" action="<?php echo url('pharmacy/medicine/create'); ?>" class="card p-4 mt-4 shadow-sm">
         <div class="mb-3">
             <label for="TenThuoc" class="form-label">Medicine Name</label>
             <input type="text" name="TenThuoc" id="TenThuoc" class="form-control" required>
@@ -29,9 +32,13 @@
             <input type="number" name="GiaTien" id="GiaTien" class="form-control" step="0.01" required>
         </div>
 
+        <input type="hidden" name="RedirectURL" value="<?php echo url('pharmarcy'); ?>#medicines-panel">
+
+
+
         <div class="text-end">
             <button type="submit" class="btn btn-success">💾 Add Medicine</button>
-            <a href="/prescriptions/staff#medicines-panel" class="btn btn-secondary">Cancel</a>
+            <a href="<?php echo url('prescriptions/staff'); ?>#medicines-panel" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>

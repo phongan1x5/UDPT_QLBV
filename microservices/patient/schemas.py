@@ -33,3 +33,19 @@ class PatientResponse(PatientBase):
 
     class Config:
         orm_mode = True
+
+
+class MaskedPatientResponse(BaseModel):
+    id: int
+    HoTen: str
+    NgaySinh: date
+    GioiTinh: str
+    SoDienThoai: str
+    SoDinhDanh: str
+    Email: str
+    DiaChi: str
+    BaoHiemYTe: Optional[str]
+    is_active: bool
+
+    class Config:
+        orm_mode = True

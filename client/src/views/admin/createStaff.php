@@ -1,9 +1,10 @@
 <?php
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
-print_r($user['token']);
-// print_r($admin);
-echo '</pre>';
+// print_r($user['token']);
+// print_r($departments);
+// // print_r($admin);
+// echo '</pre>';
 ?>
 
 <div class="container-fluid">
@@ -93,16 +94,18 @@ echo '</pre>';
                                     <label for="IDPhongBan" class="form-label">Department *</label>
                                     <select class="form-select" id="IDPhongBan" name="IDPhongBan" required>
                                         <option value="">Select Department</option>
-                                        <option value="1">Choose this, we will update later</option>
-                                        <option value="2">Emergency</option>
-                                        <option value="3">Cardiology</option>
-                                        <option value="4">Neurology</option>
-                                        <option value="5">Pediatrics</option>
-                                        <option value="6">Oncology</option>
-                                        <option value="7">Laboratory</option>
-                                        <option value="8">Pharmacy</option>
-                                        <option value="9">Radiology</option>
-                                        <option value="10">Surgery</option>
+                                        <?php if (!empty($departments)): ?>
+                                            <?php foreach ($departments as $department): ?>
+                                                <option value="<?php echo htmlspecialchars($department['IDPhongBan']); ?>">
+                                                    <?php echo htmlspecialchars($department['TenPhongBan']); ?>
+                                                    <?php if (!empty($department['IDTruongPhongBan'])): ?>
+                                                        (Manager ID: <?php echo htmlspecialchars($department['IDTruongPhongBan']); ?>)
+                                                    <?php endif; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <option value="" disabled>No departments available</option>
+                                        <?php endif; ?>
                                     </select>
                                     <div class="invalid-feedback">Please select a department.</div>
                                 </div>
@@ -347,29 +350,51 @@ echo '</pre>';
             const formData = new FormData(form);
             const staffData = Object.fromEntries(formData.entries());
 
+            // ✅ UPDATED: Get selected department text dynamically
+            const selectedDepartment = document.getElementById('IDPhongBan');
+            const departmentText = selectedDepartment.selectedOptions[0] ?
+                selectedDepartment.selectedOptions[0].text : 'Not selected';
+
+            const selectedStaffType = document.getElementById('LoaiNhanVien');
+            const staffTypeText = selectedStaffType.selectedOptions[0] ?
+                selectedStaffType.selectedOptions[0].text : 'Not selected';
+
             const previewContent = `
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="text-primary">Personal Information</h6>
-                    <table class="table table-sm">
-                        <tr><td><strong>Full Name:</strong></td><td>${staffData.HoTen}</td></tr>
-                        <tr><td><strong>Date of Birth:</strong></td><td>${new Date(staffData.NgaySinh).toLocaleDateString()}</td></tr>
-                        <tr><td><strong>Phone:</strong></td><td>${staffData.SoDienThoai}</td></tr>
-                        <tr><td><strong>ID Number:</strong></td><td>${staffData.SoDinhDanh}</td></tr>
-                        <tr><td><strong>Address:</strong></td><td>${staffData.DiaChi}</td></tr>
-                    </table>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Personal Information</h6>
+                        <table class="table table-sm table-striped">
+                            <tr><td><strong>Full Name:</strong></td><td>${staffData.HoTen}</td></tr>
+                            <tr><td><strong>Date of Birth:</strong></td><td>${new Date(staffData.NgaySinh).toLocaleDateString()}</td></tr>
+                            <tr><td><strong>Phone:</strong></td><td>${staffData.SoDienThoai}</td></tr>
+                            <tr><td><strong>ID Number:</strong></td><td>${staffData.SoDinhDanh}</td></tr>
+                            <tr><td><strong>Address:</strong></td><td>${staffData.DiaChi}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Employment Information</h6>
+                        <table class="table table-sm table-striped">
+                            <tr><td><strong>Department:</strong></td><td>${departmentText}</td></tr>
+                            <tr><td><strong>Staff Type:</strong></td><td>${staffTypeText}</td></tr>
+                            <tr><td><strong>Specialization:</strong></td><td>${staffData.ChuyenKhoa || 'Not specified'}</td></tr>
+                            <tr><td><strong>Will generate User ID:</strong></td><td class="text-primary fw-bold">${getExpectedUserId(staffData.LoaiNhanVien)}</td></tr>
+                        </table>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <h6 class="text-primary">Employment Information</h6>
-                    <table class="table table-sm">
-                        <tr><td><strong>Department:</strong></td><td>${document.getElementById('IDPhongBan').selectedOptions[0].text}</td></tr>
-                        <tr><td><strong>Staff Type:</strong></td><td>${document.getElementById('LoaiNhanVien').selectedOptions[0].text}</td></tr>
-                        <tr><td><strong>Specialization:</strong></td><td>${staffData.ChuyenKhoa || 'Not specified'}</td></tr>
-                        <tr><td><strong>Will generate User ID:</strong></td><td>${getExpectedUserId(staffData.LoaiNhanVien)}</td></tr>
-                    </table>
+                
+                <!-- ✅ NEW: Department Details -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading"><i class="fas fa-building"></i> Department Assignment</h6>
+                            <p class="mb-0">
+                                <strong>Department ID:</strong> ${staffData.IDPhongBan} | 
+                                <strong>Department Name:</strong> ${departmentText.split('(')[0].trim()}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
 
             document.getElementById('previewContent').innerHTML = previewContent;
             const modal = new bootstrap.Modal(document.getElementById('previewModal'));

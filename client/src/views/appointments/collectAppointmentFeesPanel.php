@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 echo '<pre>';
 // print_r($user);
-print_r($paid_appointments);
+// print_r($paid_appointments);
 echo '</pre>';
 ?>
 

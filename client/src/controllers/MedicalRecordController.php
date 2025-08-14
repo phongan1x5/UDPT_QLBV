@@ -76,7 +76,7 @@ class MedicalRecordController extends BaseController
     {
         // Get patient data from the API
         $patientModel = new Patient();
-        $patientData = $patientModel->getPatientById($patientId);
+        $patientData = $patientModel->getPatientByIdForDoctor($patientId);
 
         $medicalHistory = [];
 
