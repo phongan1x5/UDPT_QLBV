@@ -65,6 +65,41 @@ class BaseController
         }
     }
 
+    // public function check_admin(){
+    //     if($_SESSION['user']['user_role'] !== 'admin'){
+    //         $this->redirect('unauthorized');
+    //         exit;
+    //     }
+    // }
+
+    // public function check_staff(){
+    //     if($_SESSION['user']['user_role'] !== 'desk_staff' && $_SESSION['user']['user_role'] !== 'admin' && $_SESSION['user']['user_role'] !== 'doctor'){
+    //         $this->redirect('unauthorized');
+    //         exit;
+    //     }
+    // }
+
+    public function check_doctor(){
+        if($_SESSION['user']['user_role'] !== 'doctor'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
+    public function check_desk_staff(){
+        if($_SESSION['user']['user_role'] !== 'desk_staff'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
+    public function check_pharmacist(){
+        if($_SESSION['user']['user_role'] !== 'pharmacist'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
     private function callApi($endpoint, $method = 'GET', $data = null)
     {
         $url = $this->apiGatewayUrl . $endpoint;

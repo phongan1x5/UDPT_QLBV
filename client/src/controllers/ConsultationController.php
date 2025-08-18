@@ -10,7 +10,12 @@ require_once __DIR__ . '/../models/Lab.php';
 
 class ConsultationController extends BaseController
 {
-    //User is a docter, userId = docterId
+    public function __construct()
+    {
+        parent::__construct(); // If BaseController has its own constructor
+        $this->requireLogin();
+        $this->check_doctor();
+    }
 
     public function requestLabService()
     {
@@ -208,6 +213,38 @@ class ConsultationController extends BaseController
         }
     }
 
+    public function searchMedicine($medicineName)
+    {
+    	$this->requireLogin();
+    
+    	header('Content-Type: application/json');
+    
+    	$medicineName = trim($medicineName ?? '');
+    	if (strlen($medicineName) < 1) {
+    		http_response_code(400);
+    		echo json_encode([]);
+    		return;
+    	}
+    
+    	try {
+    		$prescriptionModel = new Prescription();
+    		$result = $prescriptionModel->searchMedicine($medicineName);
+    
+    		$status = $result['status'] ?? 500;
+    		$data = $result['data'] ?? null;
+    
+    		if ($status === 200 && is_array($data)) {
+    			echo json_encode($data);
+    		} else {
+    			http_response_code($status);
+    			echo json_encode([]);
+    		}
+    	} catch (Exception $e) {
+    		http_response_code(500);
+    		echo json_encode([]);
+    	}
+    }
+
     public function index($appointmentId)
     {
         $this->requireLogin();
@@ -240,12 +277,19 @@ class ConsultationController extends BaseController
         $patient = $patientModel->getPatientById($medicalRecord['data'][0]['MedicalRecord']['MaHSBA']);
         $labServices = $labServiceModel->getAllServices();
         $currentLabServices = $labServiceModel->getUsedServicesByMedicalRecord($medicalRecord['data'][0]['MedicalRecord']['MaGiayKhamBenh']); //In case docter reload the page
+
+        //The case that docter already give prescription
+        if ($medicalRecord['data'][0]['MedicalRecord'] && $medicalRecord['data'][0]['MedicalRecord']['ChanDoan'] !== '@Pending examination'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+
         if ($currentLabServices['status'] != 200) {
             $this->render('consulate/doctor', [
                 'doctor' => $doctor['data'][0],
                 'appointmentId' => $appointmentId,
                 'patient' => $patient['data'][0] ?? [],
-                'medicines' => $medicines['data'][0],
+                'medicines' => $medicines['data'][0] ?? [],
                 'medicalRecord' => $medicalRecord['data'][0],
                 'labServices' => $labServices['data'][0],
                 'currentLabServices' => []
@@ -255,7 +299,7 @@ class ConsultationController extends BaseController
                 'doctor' => $doctor['data'][0],
                 'appointmentId' => $appointmentId,
                 'patient' => $patient['data'][0],
-                'medicines' => $medicines['data'][0],
+                'medicines' => $medicines['data'][0] ?? [],
                 'medicalRecord' => $medicalRecord['data'][0],
                 'labServices' => $labServices['data'][0],
                 'currentLabServices' => $currentLabServices['data'][0]

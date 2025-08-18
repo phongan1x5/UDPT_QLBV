@@ -28,24 +28,20 @@ class PharmacyController extends BaseController
             case 'pharmacist':
                 $this->staffPharmacys($user);
                 break;
-            case 'doctor':
-                $this->doctorPharmacys($user);
-                break;
-            case 'admin':
-                $this->adminPharmacys($user);
-                break;
+            // case 'doctor':
+            //     $this->doctorPharmacys($user);
+            //     break;
+            // case 'admin':
+            //     $this->adminPharmacys($user);
+            //     break;
             default:
-                $this->staffPharmacys($user);
+                $this->check_pharmacist();
                 //$this->redirect('dashboard');
         }
     }
     private function staffPharmacys($user)
     {
-
-        // echo '<pre>';
-        // print_r($allPharmacys);
-        // echo '</pre>';
-        // exit();
+        $this->check_pharmacist();
         $response1 = $this->PharmacyModel->getAllPrescriptionsWithMedicines(); // or getPrescriptionById(), etc.
 
         $prescriptions = [];
@@ -66,55 +62,56 @@ class PharmacyController extends BaseController
             'medicines' => $medicines
         ]);
     }
-    private function doctorPharmacys($user)
-    {
-        $response1 = $this->PharmacyModel->getAllPrescriptions();
+    // private function doctorPharmacys($user)
+    // {
+    //     $response1 = $this->PharmacyModel->getAllPrescriptions();
 
-        $prescriptions = [];
+    //     $prescriptions = [];
 
-        if ($response1['status'] === 200 && isset($response1['data'][0])) {
-            $prescriptions = $response1['data'][0];
-        }
-        $response = $this->PharmacyModel->getAllMedicines();
+    //     if ($response1['status'] === 200 && isset($response1['data'][0])) {
+    //         $prescriptions = $response1['data'][0];
+    //     }
+    //     $response = $this->PharmacyModel->getAllMedicines();
 
-        $medicines = [];
-        if ($response['status'] === 200 && isset($response['data'][0])) {
-            $medicines = $response['data'][0];
-        }
+    //     $medicines = [];
+    //     if ($response['status'] === 200 && isset($response['data'][0])) {
+    //         $medicines = $response['data'][0];
+    //     }
 
-        $this->render('pharmacy/doctor', [
-            'user' => $user,
-            'prescriptions' => $prescriptions,
-            'medicines' => $medicines
-        ]);
-    }
+    //     $this->render('pharmacy/doctor', [
+    //         'user' => $user,
+    //         'prescriptions' => $prescriptions,
+    //         'medicines' => $medicines
+    //     ]);
+    // }
 
-    private function adminPharmacys($user)
-    {
-        $response1 = $this->PharmacyModel->getAllPrescriptions();
+    // private function adminPharmacys($user)
+    // {
+    //     $response1 = $this->PharmacyModel->getAllPrescriptions();
 
-        $prescriptions = [];
+    //     $prescriptions = [];
 
-        if ($response1['status'] === 200 && isset($response1['data'][0])) {
-            $prescriptions = $response1['data'][0];
-        }
-        $response = $this->PharmacyModel->getAllMedicines();
+    //     if ($response1['status'] === 200 && isset($response1['data'][0])) {
+    //         $prescriptions = $response1['data'][0];
+    //     }
+    //     $response = $this->PharmacyModel->getAllMedicines();
 
-        $medicines = [];
-        if ($response['status'] === 200 && isset($response['data'][0])) {
-            $medicines = $response['data'][0];
-        }
+    //     $medicines = [];
+    //     if ($response['status'] === 200 && isset($response['data'][0])) {
+    //         $medicines = $response['data'][0];
+    //     }
 
-        $this->render('pharmacy/doctor', [
-            'user' => $user,
-            'prescriptions' => $prescriptions,
-            'medicines' => $medicines
-        ]);
-    }
+    //     $this->render('pharmacy/doctor', [
+    //         'user' => $user,
+    //         'prescriptions' => $prescriptions,
+    //         'medicines' => $medicines
+    //     ]);
+    // }
 
     public function viewPharmacy($id)
     {
         $this->requireLogin();
+        $this->check_pharmacist();
         $user = $_SESSION['user'] ?? null;
 
         if (!$user) {
@@ -158,9 +155,9 @@ class PharmacyController extends BaseController
     }
 
     public function updateStatus()
-    {
+    {       
         $this->requireLogin();
-
+        $this->check_pharmacist();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('pharmacy/staff');
             return;
@@ -183,7 +180,7 @@ class PharmacyController extends BaseController
     public function paidPrescription()
     {
         $this->requireLogin();
-
+        $this->check_pharmacist();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('pharmacy/staff');
             return;
@@ -205,7 +202,7 @@ class PharmacyController extends BaseController
     public function handleMedicine()
     {
         $this->requireLogin();
-
+        $this->check_pharmacist();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('pharmacy/staff');
             return;
@@ -229,6 +226,7 @@ class PharmacyController extends BaseController
     public function medicines()
     {
         $this->requireLogin();
+        $this->check_pharmacist();
         $user = $_SESSION['user'] ?? null;
 
         if (!$user) {
@@ -248,6 +246,7 @@ class PharmacyController extends BaseController
     public function addMedicineForm()
     {
         $this->requireLogin();
+        $this->check_pharmacist();
         $user = $_SESSION['user'] ?? null;
 
         if (!$user) {
@@ -262,6 +261,8 @@ class PharmacyController extends BaseController
 
     public function addMedicine()
     {
+        $this->requireLogin();
+        $this->check_pharmacist();
         $medicineData = [
             'TenThuoc' => $_POST['TenThuoc'] ?? '',
             'DonViTinh' => $_POST['DonViTinh'] ?? '',
@@ -283,7 +284,8 @@ class PharmacyController extends BaseController
 
     public function updateMedicineForm()
     {
-
+        $this->requireLogin();
+        $this->check_pharmacist();
         $medicineId = $_GET['MaThuoc'] ?? null;
 
         $medicine = $this->PharmacyModel->getMedicineById($medicineId);
@@ -300,6 +302,8 @@ class PharmacyController extends BaseController
 
     public function updateMedicine()
     {
+        $this->requireLogin();
+        $this->check_pharmacist();
         $medicineId = $_POST['MaThuoc'] ?? null;
 
         if (!$medicineId) {

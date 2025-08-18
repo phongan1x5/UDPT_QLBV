@@ -14,6 +14,14 @@ class AppointmentController extends BaseController
         $this->medicalRecordModel = new MedicalRecord(); // Add this line
     }
 
+    public function check_staff(){
+        // error_log(print_r($_SESSION['user'], true));
+        if($_SESSION['user']['user_role'] !== 'desk_staff' && $_SESSION['user']['user_role'] !== 'admin' && $_SESSION['user']['user_role'] !== 'doctor'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
     public function index()
     {
         $this->requireLogin();
@@ -44,7 +52,6 @@ class AppointmentController extends BaseController
     private function patientAppointments($patientId = "")
     {
         $user = $_SESSION['user'];
-
         //Meaning that this is a patient
         if ($patientId == "") $patientId = $this->extractPatientId($user['user_id']);
         $patientId = $this->extractPatientId($user['user_id']);
@@ -79,6 +86,7 @@ class AppointmentController extends BaseController
     public function book($patientId = "")
     {
         $this->requireLogin();
+
         $user = $_SESSION['user'] ?? null;
 
         if (!$user) {
@@ -332,6 +340,7 @@ class AppointmentController extends BaseController
     public function doctorAppointments($doctorId = "")
     {
         $this->requireLogin();
+        $this->check_staff();
         $user = $_SESSION['user'] ?? null;
 
         if (!$user) {
@@ -359,8 +368,8 @@ class AppointmentController extends BaseController
 
     private function adminAppointments()
     {
-        // TODO: Implement admin view
         $response = $this->appointmentModel->getAllAppointments();
+        $this->check_staff();
         $appointments = [];
 
         if ($response['status'] === 200) {
@@ -391,6 +400,7 @@ class AppointmentController extends BaseController
 
     public function collectAppointmentFeesPanel($patientId)
     {
+        $this->check_staff();
         $user = $_SESSION['user'];
         $appointmentModel = new Appointment();
         $appointments = $appointmentModel->getPatientVerifiedAppointments($patientId);
@@ -415,6 +425,7 @@ class AppointmentController extends BaseController
     public function doctorSchedule($doctorId = "")
     {
         $this->requireLogin();
+        $this->check_staff();
         $user = $_SESSION['user'] ?? null;
 
         if (!$user) {

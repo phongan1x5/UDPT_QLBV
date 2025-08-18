@@ -5,11 +5,25 @@ require_once __DIR__ . '/../models/Appointment.php';
 
 class MedicalRecordController extends BaseController
 {
+    public function check_ds_or_doctor(){
+        if($_SESSION['user']['user_role'] !== 'desk_staff' &&  $_SESSION['user']['user_role'] !== 'doctor'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
+    public function check_patient_ds_doctor(){
+        if($_SESSION['user']['user_role'] !== 'patient' && $_SESSION['user']['user_role'] !== 'desk_staff' && $_SESSION['user']['user_role'] !== 'doctor'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
 
     public function doctorRecentMedicalRecord()
     {
         $this->requireLogin();
-
+        $this->check_ds_or_doctor();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -37,6 +51,7 @@ class MedicalRecordController extends BaseController
 
     private function patientMedicalRecords($user)
     {
+        $this->check_patient_ds_doctor();
         // Get patient data from the API
         $patientModel = new Patient();
         $patientData = $patientModel->getCurrentPatient();
@@ -74,6 +89,7 @@ class MedicalRecordController extends BaseController
 
     private function doctorViewMedicalHistory($patientId)
     {
+        $this->check_ds_or_doctor();
         // Get patient data from the API
         $patientModel = new Patient();
         $patientData = $patientModel->getPatientByIdForDoctor($patientId);
@@ -97,6 +113,7 @@ class MedicalRecordController extends BaseController
 
     public function viewDetail($MaGiayKhamBenh)
     {
+        $this->check_patient_ds_doctor();
         $medicalRecordModel = new MedicalRecord();
         $labServiceModel = new Lab();
         $prescriptionModel = new Prescription();
@@ -115,7 +132,7 @@ class MedicalRecordController extends BaseController
     public function updateHistory($MaHSBA)
     {
         $this->requireLogin();
-
+        $this->check_doctor();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 

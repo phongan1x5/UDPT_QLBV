@@ -83,6 +83,13 @@ ob_start();
                                     placeholder="Enter full address..." required></textarea>
                                 <div class="invalid-feedback">Please provide a valid address.</div>
                             </div>
+
+                            <div class="mb-3">
+                                <label for="Email" class="form-label">Email *</label>
+                                <textarea class="form-control" id="Email" name="Email" rows="3"
+                                    placeholder="Enter email address..." required></textarea>
+                                <div class="invalid-feedback">Please provide a valid email.</div>
+                            </div>
                         </div>
 
                         <!-- Employment Information Section -->
@@ -287,7 +294,7 @@ ob_start();
                 .then(data => {
                     console.log(data)
                     if (data.success) {
-                        showMessage('success', 'Staff member created successfully! User ID: ' + data.user_id);
+                        showMessage('success', 'Staff member created successfully');
                         form.reset();
                         form.classList.remove('was-validated');
 
@@ -369,6 +376,7 @@ ob_start();
                             <tr><td><strong>Phone:</strong></td><td>${staffData.SoDienThoai}</td></tr>
                             <tr><td><strong>ID Number:</strong></td><td>${staffData.SoDinhDanh}</td></tr>
                             <tr><td><strong>Address:</strong></td><td>${staffData.DiaChi}</td></tr>
+                            <tr><td><strong>Email:</strong></td><td>${staffData.Email}</td></tr>
                         </table>
                     </div>
                     <div class="col-md-6">

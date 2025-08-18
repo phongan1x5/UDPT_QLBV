@@ -159,9 +159,6 @@ switch ($pathParts[0]) {
                 }
                 break;
             }
-
-            $controller->index();
-            break;
         }
         $controller->index();
         break;
@@ -296,6 +293,13 @@ switch ($pathParts[0]) {
             break;
         }
 
+        if (isset($pathParts[1]) && $pathParts[1] === 'search-medicine') {
+            if (isset($pathParts[2])) {
+                $controller->searchMedicine($pathParts[2]);
+            }
+            break;
+        }
+
         if (isset($pathParts[1]) && $pathParts[1] === 'submit-prescription') {
             $controller->submitPrescription();
             break;
@@ -419,6 +423,10 @@ switch ($pathParts[0]) {
         }
         break;
 
+    case 'unauthorized':
+        $controller = new AuthController();
+        $controller->unauthorized();
+        break;
 
     default:
         http_response_code(404);

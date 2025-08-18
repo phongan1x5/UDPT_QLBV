@@ -29,17 +29,17 @@ class LabController extends BaseController
             case 'lab_staff':
                 $this->staffLabServices($user);
                 break;
-            case 'doctor':
-                $this->doctorLabServices($user);
-                break;
-            case 'admin':
-                $this->adminLabServices($user);
-                break;
+            // case 'doctor':
+            //     $this->doctorLabServices($user);
+            //     break;
+            // case 'admin':
+            //     $this->adminLabServices($user);
+            //     break;
             case 'patient':
                 $this->patientLabServices($user);
                 break;
             default:
-                $this->redirect('dashboard');
+                $this->redirect('unauthorized');
         }
     }
 
@@ -101,36 +101,36 @@ class LabController extends BaseController
         ]);
     }
 
-    private function doctorLabServices($user)
-    {
-        $rawUsedServices = $this->labModel->getAllUsedServices();
-        $rawServices = $this->labModel->getAllServices();
+    // private function doctorLabServices($user)
+    // {
+    //     $rawUsedServices = $this->labModel->getAllUsedServices();
+    //     $rawServices = $this->labModel->getAllServices();
 
-        $usedServices = $rawUsedServices['data'][0];
-        $services = $rawServices['data'][0];
+    //     $usedServices = $rawUsedServices['data'][0];
+    //     $services = $rawServices['data'][0];
 
-        $serviceMap = [];
-        foreach ($services as $s) {
-            $serviceMap[$s['MaDichVu']] = $s;
-        }
+    //     $serviceMap = [];
+    //     foreach ($services as $s) {
+    //         $serviceMap[$s['MaDichVu']] = $s;
+    //     }
 
-        foreach ($usedServices as &$us) {
-            $ma = $us['MaDichVu'];
-            if (isset($serviceMap[$ma])) {
-                $us['TenDichVu'] = $serviceMap[$ma]['TenDichVu'];
-                $us['NoiDungDichVu'] = $serviceMap[$ma]['NoiDungDichVu'];
-                $us['DonGia'] = $serviceMap[$ma]['DonGia'];
-                $filepath = $us['FileKetQua'] ?? '';
-                $us['FileKetQua'] = pathinfo($filepath, PATHINFO_FILENAME);
-            }
-        }
+    //     foreach ($usedServices as &$us) {
+    //         $ma = $us['MaDichVu'];
+    //         if (isset($serviceMap[$ma])) {
+    //             $us['TenDichVu'] = $serviceMap[$ma]['TenDichVu'];
+    //             $us['NoiDungDichVu'] = $serviceMap[$ma]['NoiDungDichVu'];
+    //             $us['DonGia'] = $serviceMap[$ma]['DonGia'];
+    //             $filepath = $us['FileKetQua'] ?? '';
+    //             $us['FileKetQua'] = pathinfo($filepath, PATHINFO_FILENAME);
+    //         }
+    //     }
 
-        $this->render('lab/doctor', [
-            'user' => $user,
-            'usedServices' => $usedServices,
-            'services' => $services
-        ]);
-    }
+    //     $this->render('lab/doctor', [
+    //         'user' => $user,
+    //         'usedServices' => $usedServices,
+    //         'services' => $services
+    //     ]);
+    // }
 
     private function staffLabServices($user)
     {
@@ -163,38 +163,38 @@ class LabController extends BaseController
         ]);
     }
 
-    private function adminLabServices($user)
-    {
+    // private function adminLabServices($user)
+    // {
 
-        $rawUsedServices = $this->labModel->getAllUsedServices();
-        $rawServices = $this->labModel->getAllServices();
+    //     $rawUsedServices = $this->labModel->getAllUsedServices();
+    //     $rawServices = $this->labModel->getAllServices();
 
-        $usedServices = $rawUsedServices['data'][0];
-        $services = $rawServices['data'][0];
+    //     $usedServices = $rawUsedServices['data'][0];
+    //     $services = $rawServices['data'][0];
 
-        $serviceMap = [];
-        foreach ($services as $s) {
-            $serviceMap[$s['MaDichVu']] = $s;
-        }
+    //     $serviceMap = [];
+    //     foreach ($services as $s) {
+    //         $serviceMap[$s['MaDichVu']] = $s;
+    //     }
 
-        foreach ($usedServices as &$us) {
-            $ma = $us['MaDichVu'];
-            if (isset($serviceMap[$ma])) {
-                $us['TenDichVu'] = $serviceMap[$ma]['TenDichVu'];
-                $us['NoiDungDichVu'] = $serviceMap[$ma]['NoiDungDichVu'];
-                $us['DonGia'] = $serviceMap[$ma]['DonGia'];
+    //     foreach ($usedServices as &$us) {
+    //         $ma = $us['MaDichVu'];
+    //         if (isset($serviceMap[$ma])) {
+    //             $us['TenDichVu'] = $serviceMap[$ma]['TenDichVu'];
+    //             $us['NoiDungDichVu'] = $serviceMap[$ma]['NoiDungDichVu'];
+    //             $us['DonGia'] = $serviceMap[$ma]['DonGia'];
 
-                $filepath = $us['FileKetQua'] ?? '';
-                $us['FileKetQua'] = pathinfo($filepath, PATHINFO_FILENAME);
-            }
-        }
+    //             $filepath = $us['FileKetQua'] ?? '';
+    //             $us['FileKetQua'] = pathinfo($filepath, PATHINFO_FILENAME);
+    //         }
+    //     }
 
-        $this->render('lab/admin', [
-            'user' => $user,
-            'usedServices' => $usedServices,
-            'services' => $services
-        ]);
-    }
+    //     $this->render('lab/admin', [
+    //         'user' => $user,
+    //         'usedServices' => $usedServices,
+    //         'services' => $services
+    //     ]);
+    // }
 
     public function viewUsedService($usedServiceId)
     {

@@ -15,6 +15,13 @@ class PrescriptionController extends BaseController
         $this->medicalRecordModel = new MedicalRecord();
     }
 
+    public function check_patient_dr(){
+        if($_SESSION['user']['user_role'] !== 'patient' && $_SESSION['user']['user_role'] !== 'doctor'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
     public function index()
     {
         $this->requireLogin();
@@ -30,12 +37,12 @@ class PrescriptionController extends BaseController
             case 'patient':
                 $this->patientPrescriptions($user);
                 break;
-            case 'doctor':
-                $this->doctorPrescriptions($user);
-                break;
-            case 'admin':
-                $this->adminPrescriptions($user);
-                break;
+            // case 'doctor':
+            //     $this->doctorPrescriptions($user);
+            //     break;
+            // case 'admin':
+            //     $this->adminPrescriptions($user);
+            //     break;
             default:
                 $this->redirect('dashboard');
         }
@@ -60,8 +67,8 @@ class PrescriptionController extends BaseController
 
     private function patientPrescriptions($user)
     {
+        $this->check_patient_dr();
         $patientId = $this->extractPatientId($user['user_id']);
-
         // Initialize arrays
         $patientPrescriptions = [];
         $medicalHistory = null;
@@ -137,30 +144,31 @@ class PrescriptionController extends BaseController
         ]);
     }
 
-    private function doctorPrescriptions($user)
-    {
-        // TODO: Implement doctor prescriptions view
-        $this->render('prescriptions/doctor', [
-            'user' => $user,
-            'message' => 'Doctor prescriptions view coming soon!'
-        ]);
-    }
+    // private function doctorPrescriptions($user)
+    // {
+    //     // TODO: Implement doctor prescriptions view
+    //     $this->render('prescriptions/doctor', [
+    //         'user' => $user,
+    //         'message' => 'Doctor prescriptions view coming soon!'
+    //     ]);
+    // }
 
-    private function adminPrescriptions($user)
-    {
-        // Get all prescriptions for admin
-        $allPrescriptions = $this->prescriptionModel->getAllPrescriptions();
-        $allMedicines = $this->prescriptionModel->getAllMedicines();
+    // private function adminPrescriptions($user)
+    // {
+    //     // Get all prescriptions for admin
+    //     $allPrescriptions = $this->prescriptionModel->getAllPrescriptions();
+    //     $allMedicines = $this->prescriptionModel->getAllMedicines();
 
-        $this->render('prescriptions/admin', [
-            'user' => $user,
-            'prescriptions' => $allPrescriptions,
-            'medicines' => $allMedicines
-        ]);
-    }
+    //     $this->render('prescriptions/admin', [
+    //         'user' => $user,
+    //         'prescriptions' => $allPrescriptions,
+    //         'medicines' => $allMedicines
+    //     ]);
+    // }
 
     public function viewDetailPrescription($prescriptionId)
     {
+        $this->check_patient_dr();
         $this->requireLogin();
         $user = $_SESSION['user'] ?? null;
 
@@ -178,7 +186,8 @@ class PrescriptionController extends BaseController
     }
 
     public function updateStatus()
-    {
+    {   
+        $this->check_doctor();
         $this->requireLogin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -201,6 +210,7 @@ class PrescriptionController extends BaseController
 
     public function medicines()
     {
+        $this->check_patient_dr();
         $this->requireLogin();
         $user = $_SESSION['user'] ?? null;
 

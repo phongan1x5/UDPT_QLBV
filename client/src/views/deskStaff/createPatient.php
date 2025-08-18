@@ -129,13 +129,13 @@ ob_start();
                         <div class="mb-4">
                             <h6 class="text-primary mb-3"><i class="fas fa-key"></i> Login Information</h6>
 
-                            <div class="row">
+                            <div class="row" style="display: none;">
                                 <div class="col-md-6 mb-3">
                                     <label for="Password" class="form-label">Password *</label>
                                     <div class="input-group">
                                         <input type="password" class="form-control" id="Password" name="Password"
-                                            minlength="6" required>
-                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            value="FixedPassword123" readonly minlength="6" required>
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword" disabled>
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
@@ -145,10 +145,12 @@ ob_start();
 
                                 <div class="col-md-6 mb-3">
                                     <label for="ConfirmPassword" class="form-label">Confirm Password *</label>
-                                    <input type="password" class="form-control" id="ConfirmPassword" name="ConfirmPassword" required>
+                                    <input type="password" class="form-control" id="ConfirmPassword" name="ConfirmPassword"
+                                        value="FixedPassword123" readonly required>
                                     <div class="invalid-feedback">Passwords do not match.</div>
                                 </div>
                             </div>
+
 
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle"></i>
@@ -303,14 +305,38 @@ ob_start();
                     console.log('Response data:', data);
 
                     if (data && data.success) {
-                        showMessage('success', 'Patient registered successfully! Patient ID: ' + (data.patient_id || 'Generated'));
+                        // 🔧 Extract patient ID from the nested response structure
+                        let patientId = 'Generated';
+                        console.log(data.data)
+                        console.log(data.data.newPatient.data[0].id)
+                        if (data.data.newPatient.data[0].id) {
+                            patientId = data.data.newPatient.data[0].id
+                        }
+
+                        // Generate user ID format for display
+                        const userDisplayId = patientId !== 'Generated' ? `BN${patientId}` : 'Generated';
+
+                        showMessage('success', `
+                            <strong>Patient registered successfully!</strong><br>
+                            <strong>Patient ID:</strong> ${patientId}<br>
+                            <strong>Login ID:</strong> ${userDisplayId}<br>
+                            <small class="text-muted">Login credentials have been sent to the patient's email.</small>
+                        `);
+
                         form.reset();
                         form.classList.remove('was-validated');
 
-                        // Redirect after 3 seconds
+                        // Show success details
+                        console.log('Patient registration details:', {
+                            patientId: patientId,
+                            userLoginId: userDisplayId,
+                            patientData: data.data
+                        });
+
+                        // Redirect after 3 seconds (changed from 1000000 to 3000)
                         setTimeout(() => {
                             window.location.href = '<?php echo url("dashboard"); ?>';
-                        }, 3000);
+                        }, 3000000);
                     } else {
                         showMessage('danger', 'Error: ' + (data?.message || 'Failed to register patient'));
                     }

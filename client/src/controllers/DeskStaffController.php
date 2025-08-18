@@ -10,7 +10,13 @@ require_once __DIR__ . '/../models/Lab.php';
 
 class DeskStaffController extends BaseController
 {
-    //User is a docter, userId = docterId
+    public function __construct()
+    {
+        parent::__construct(); // If BaseController has its own constructor
+        $this->requireLogin();
+        $this->check_desk_staff();
+    }
+
     public function createPatient()
     {
         $this->requireLogin();

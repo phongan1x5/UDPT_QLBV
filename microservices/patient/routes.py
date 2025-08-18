@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 import models, schemas, database
 from typing import List
 import requests
+from rabbitmq import publish_event
+import json
+import secrets
 
 router = APIRouter()
 
@@ -30,6 +33,9 @@ def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)
     db.commit()
     db.refresh(db_patient)
 
+    #Replace input password with a secure random UID
+    patient.Password = secrets.token_hex(3)
+
     # Generate user_id for the auth service
     user_id = f"BN{db_patient.id}"
 
@@ -47,11 +53,12 @@ def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)
     print(HoSoBenhAn_payload)
 
     # Make a request to the auth service to create the user
-    auth_service_url = "http://api_gateway:6000/auth/register"  # Replace with the actual auth service URL
-    medicalRecord_service_url = "http://api_gateway:6000/medical-profiles"  # Replace with the actual auth service URL
+    auth_service_url = "http://api_gateway:6000/auth/register"
+    medicalRecord_service_url = "http://api_gateway:6000/medical-profiles"
+    
     try:
         response = requests.post(auth_service_url, json=auth_payload)
-        response.raise_for_status()  # Raise an exception for HTTP errors
+        response.raise_for_status()
     except requests.exceptions.RequestException as e:
         # Rollback the patient creation if the auth service fails
         db.delete(db_patient)
@@ -63,7 +70,7 @@ def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)
     
     try:
         response = requests.post(medicalRecord_service_url, json=HoSoBenhAn_payload)
-        response.raise_for_status()  # Raise an exception for HTTP errors
+        response.raise_for_status()
     except requests.exceptions.RequestException as e:
         # Rollback the patient creation if the auth service fails
         db.delete(db_patient)
@@ -73,6 +80,42 @@ def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)
             detail=f"Failed to create user HSBA: {str(e)}"
         )
     
+    # 🔧 Send welcome email with login credentials via RabbitMQ (Updated format)
+    try:
+        # Prepare welcome email message
+        welcome_message = f"""Welcome to Hospital Management System!
+
+Dear {db_patient.HoTen},
+
+Your patient account has been successfully created. Here are your login credentials:
+
+🆔 User ID: {user_id}
+🔑 Password: {patient.Password}
+
+You can use these credentials to:
+• View your medical records
+• Check lab results
+• Schedule appointments
+• Access prescription information
+
+Please keep these credentials safe and change your password after your first login.
+
+For any questions, please contact our support team.
+
+Best regards,
+Hospital Management Team"""
+
+        payload = f"UserID:BN{user_id}, UserEmail:{db_patient.Email}, SourceSystem:Patient Registration, Message:{welcome_message}"
+
+        # Publish using the same pattern as appointment service
+        publish_event("patient_welcome_email", payload)
+        
+        print(f"✅ Welcome email queued for patient {user_id} ({db_patient.Email})")
+
+    except Exception as e:
+        # Don't fail the entire registration if email fails
+        print(f"⚠️ Warning: Failed to queue welcome email for patient {user_id}: {str(e)}")
+        # Could optionally log this to a monitoring system
 
     return db_patient
 
@@ -101,7 +144,6 @@ def get_patient_for_doctor(patient_id: int, db: Session = Depends(get_db)):
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return patient.masked()
-
 
 @router.put("/patients/{patient_id}", response_model=schemas.PatientResponse)
 def update_patient(patient_id: int, patient_update: schemas.PatientUpdate, db: Session = Depends(get_db)):

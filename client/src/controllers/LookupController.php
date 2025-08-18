@@ -10,7 +10,15 @@ require_once __DIR__ . '/../models/Lab.php';
 
 class LookupController extends BaseController
 {
-    //User is a docter, userId = docterId
+    public function __construct()
+    {
+        parent::__construct(); // If BaseController has its own constructor
+        if($_SESSION['user']['user_role'] !== 'desk_staff' && $_SESSION['user']['user_role'] !== 'admin' && $_SESSION['user']['user_role'] !== 'doctor'){
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
     public function lookupPatientMedicalHistory()
     {
         $this->requireLogin();

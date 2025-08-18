@@ -13,6 +13,7 @@ class RecentMedicalRecord extends BaseController
     public function index()
     {
         $this->requireLogin();
+        $this->check_doctor();
 
         // Get user data from session
         $user = $_SESSION['user'] ?? null;

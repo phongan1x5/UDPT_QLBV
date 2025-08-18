@@ -10,16 +10,22 @@ require_once __DIR__ . '/../models/Lab.php';
 
 class AdminController extends BaseController
 {
+    public function check_admin(){
+        $user = $_SESSION['user'] ?? null;
+
+        if (!$user || $user['user_role'] !== 'admin') {
+            $this->redirect('unauthorized');
+            exit;
+        }
+    }
+
     public function createDepartment()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
-        if (!$user) {
-            $this->redirect('login');
-            return;
-        }
 
         $staffModel = new Staff();
 
@@ -50,6 +56,7 @@ class AdminController extends BaseController
     public function createStaff()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -70,6 +77,7 @@ class AdminController extends BaseController
     public function submitCreateStaff()
     {
         $this->requireLogin();
+        $this->check_admin();
         error_log("Content-Type: " . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
         error_log("POST data: " . print_r($_POST, true));
         error_log("Raw input: " . file_get_contents('php://input'));
@@ -81,6 +89,7 @@ class AdminController extends BaseController
             'DiaChi' => trim($_POST['DiaChi']),
             'SoDienThoai' => trim($_POST['SoDienThoai']),
             'SoDinhDanh' => trim($_POST['SoDinhDanh']),
+            'Email' => trim($_POST['Email']),
             'LoaiNhanVien' => trim($_POST['LoaiNhanVien']),
             'Password' => trim($_POST['Password'])
         ];
@@ -121,6 +130,7 @@ class AdminController extends BaseController
     public function viewAllStaff()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -140,6 +150,7 @@ class AdminController extends BaseController
     public function viewAllDepartment()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -159,6 +170,7 @@ class AdminController extends BaseController
     public function viewAllPatient()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -178,6 +190,7 @@ class AdminController extends BaseController
     public function prescriptionReport()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -210,6 +223,7 @@ class AdminController extends BaseController
     public function patientReport()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -289,6 +303,7 @@ class AdminController extends BaseController
     public function updateStaffView()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -357,6 +372,7 @@ class AdminController extends BaseController
     public function updatePatientView()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 
@@ -375,6 +391,7 @@ class AdminController extends BaseController
     public function broadcastNotificationToStaffView()
     {
         $this->requireLogin();
+        $this->check_admin();
         // Get user data from session
         $user = $_SESSION['user'] ?? null;
 

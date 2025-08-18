@@ -383,6 +383,12 @@ async def create_medicine(request: Request):
 async def list_medicines(request: Request, skip: int = 0, limit: int = 100):
     return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/medicines?skip={skip}&limit={limit}", request=request)
 
+@router.get("/search-medicine")
+async def search_medicines(request: Request, q: str, limit: int = 100):
+	from urllib.parse import quote
+	encoded_q = quote(q)
+	return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/search-medicine?q={encoded_q}&limit={limit}", request=request)
+
 @router.get("/medicines/{medicine_id}")
 async def get_medicine(medicine_id: int, request: Request):
     return await forward_request("GET", f"{MICROSERVICE_URLS['pharmacy']}/medicines/{medicine_id}", request=request)

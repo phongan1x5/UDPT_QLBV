@@ -162,6 +162,21 @@ class Prescription
         return $this->callApi('/medicines/' . $medicineId, 'GET', null, $headers);
     }
 
+    public function searchMedicine($medicineName)
+    {
+        $token = $_SESSION['user']['token'] ?? null;
+
+        if (!$token) {
+            return ['status' => 401, 'data' => ['error' => 'Authentication required']];
+        }
+
+        $headers = ['Authorization: Bearer ' . $token];
+
+        $encodedMedicineName = urlencode($medicineName);
+
+        return $this->callApi('/search-medicine?q=' . $encodedMedicineName, 'GET', null, $headers);
+    }
+
     public function createMedicine($medicineData)
     {
         $token = $_SESSION['user']['token'] ?? null;

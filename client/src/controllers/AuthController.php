@@ -138,6 +138,11 @@ class AuthController extends BaseController
         $this->redirect('login');
     }
 
+    public function unauthorized()
+    {
+        $this->render('auth/unauthorized');
+    }
+
     private function callApi($endpoint, $method = 'GET', $data = null)
     {
         $url = $this->apiGatewayUrl . $endpoint;

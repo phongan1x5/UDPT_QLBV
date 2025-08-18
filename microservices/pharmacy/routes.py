@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 import models, schemas, database
 from typing import List
+from rapidfuzz import process, fuzz
 from rabbitmq import publish_event  # ✅ Import RabbitMQ publisher
 import requests  # ✅ Import requests for API calls
 
@@ -101,6 +102,28 @@ def get_medicine(medicine_id: int, db: Session = Depends(get_db)):
     if not medicine:
         raise HTTPException(status_code=404, detail="Medicine not found")
     return medicine
+
+@router.get("/search-medicine", response_model=List[schemas.ThuocResponse])
+def search_medicine(
+    q: str = Query(..., min_length=1),
+    db: Session = Depends(get_db),
+    limit: int = 20
+):
+    # Step 1: Fetch all medicines
+    medicines = db.query(models.Thuoc).all()
+    if not medicines:
+        raise HTTPException(status_code=404, detail="No medicines found")
+
+    # Step 2: Extract names and map to objects
+    name_to_obj = {thuoc.TenThuoc: thuoc for thuoc in medicines}
+    medicine_names = list(name_to_obj.keys())
+
+    # Step 3: Fuzzy match
+    matches = process.extract(q, medicine_names, limit=limit, scorer=fuzz.WRatio)
+    print(matches)
+
+    # Step 4: Return matched medicine objects
+    return [name_to_obj[name] for name, score, _ in matches if score > 60]
 
 # === PRESCRIPTION ROUTES ===
 @router.post("/prescriptions", response_model=schemas.ToaThuocResponse)  # Simple response
