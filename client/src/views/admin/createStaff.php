@@ -299,9 +299,9 @@ ob_start();
                         form.classList.remove('was-validated');
 
                         // Redirect after 2 seconds
-                        // setTimeout(() => {
-                        //     window.location.href = '<?php echo url("admin/staff"); ?>';
-                        // }, 2000);
+                        setTimeout(() => {
+                            window.location.href = '<?php echo url("admin/staff"); ?>';
+                        }, 2000);
                     } else {
                         showMessage('danger', 'Error: ' + (data.message || 'Failed to create staff member'));
                     }

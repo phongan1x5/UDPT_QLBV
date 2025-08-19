@@ -67,6 +67,15 @@ switch ($pathParts[0]) {
         }
         break;
 
+    case 'changePassword':
+        $controller = new AuthController();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->changePassword();
+        } else {
+            $controller->showChangePassword();
+        }
+        break;
+
     case 'logout':
         $controller = new AuthController();
         $controller->logout();

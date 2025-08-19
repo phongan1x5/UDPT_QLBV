@@ -22,6 +22,14 @@ class AuthController extends BaseController
         $this->render('auth/register');
     }
 
+    public function showChangePassword()
+    {
+        if (!($this->isLoggedIn())) {
+            $this->redirect('dashboard');
+        }
+        $this->render('auth/changePassword');
+    }
+
     public function login()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -128,6 +136,70 @@ class AuthController extends BaseController
                     $error = $response['data']['detail'];
                 }
                 $this->render('auth/register', ['error' => $error]);
+            }
+        }
+    }
+
+    public function changePassword()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = trim($_POST['id'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $newPassword = $_POST['newPassword'] ?? '';
+
+            // Basic validation
+            if (empty($id) || empty($password) || empty($newPassword)) {
+                $error = "Please enter both ID, password and newPassword";
+                $this->render('auth/changePassword', ['error' => $error]);
+                return;
+            }
+
+            // Call microservice API
+            $response = $this->callApi('/auth/changePassword', 'POST', [
+                'id' => $id,
+                'password' => $password,
+                'newPassword' => $newPassword
+            ]);
+            // Debug: Echo the login response
+            echo "<h3>Login Response Debug:</h3>";
+            echo "<pre>";
+            var_dump($response);
+            echo "</pre>";
+
+            // After fixing API Gateway, the response should be:
+            // {"access_token": "...", "token_type": "bearer"}
+            if ($response && $response['status'] === 200 && isset($response['data'][0]['access_token'])) {
+                $token = $response['data'][0]['access_token'];
+                $tokenType = $response['data'][0]['token_type'];
+
+                // Get user info by validating token
+                $userResponse = $this->callApi('/auth/validate-token?token=' . urlencode($token), 'GET');
+                echo "<h3>User Response Debug:</h3>";
+                echo "<pre>";
+                var_dump($userResponse);
+                echo "</pre>";
+                // After fixing API Gateway, the response should be:
+                // {"message": "Token is valid", "user": {"id": "BN100", "role": "patient"}}
+                if ($userResponse && $userResponse['status'] === 200 && isset($userResponse['data'][0]['user'])) {
+                    // Store in session
+                    $_SESSION['user'] = [
+                        'token' => $token,
+                        'token_type' => $tokenType,
+                        'user_id' => $userResponse['data'][0]['user']['id'],
+                        'user_role' => $userResponse['data'][0]['user']['role']
+                    ];
+
+                    $this->redirect('dashboard');
+                } else {
+                    $error = "Failed to retrieve user information";
+                    $this->render('auth/changePassword', ['error' => $error]);
+                }
+            } else {
+                $error = "Invalid credentials";
+                if (isset($response['data']['detail'])) {
+                    $error = $response['data']['detail'];
+                }
+                $this->render('auth/changePassword', ['error' => $error]);
             }
         }
     }

@@ -60,6 +60,23 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 
     return {"access_token": access_token, "token_type": "bearer"}
 
+@router.post("/changePassword", response_model=schemas.Token)
+def login(user: schemas.UserChangePassword, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.id == user.id).first()
+    # user.password = get_password_hash(user.password)
+    print("send in password: ", user.password)
+    print("stored password: ", db_user.hashed_password)
+    if not db_user or not verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+
+    new_hashed_password = get_password_hash(user.newPassword)
+    db_user.hashed_password = new_hashed_password
+    db.commit()
+    access_token = create_access_token({"id": db_user.id, "role": db_user.role})
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
 @router.get("/validate-token")
 def validate_token(token: str, db: Session = Depends(get_db)):
     try:

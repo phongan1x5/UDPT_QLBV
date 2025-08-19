@@ -60,6 +60,12 @@ if ($patient && $patient['status'] === 200 && isset($patient['data'][0])) {
                                             <i class="fas fa-shield-alt"></i> Insured
                                         </span>
                                     <?php endif; ?>
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        <a href="<?php echo url('changePassword'); ?>">
+                                            <i class="fas fa-shield-alt">
+                                            </i> Change Password
+                                        </a>
+                                    </span>
                                 </p>
                             </div>
                             <!-- <div class="col-md-3 text-end">

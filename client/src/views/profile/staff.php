@@ -146,6 +146,13 @@ error_log(print_r($staffTypeInfo, true));
                                             </p>
                                         </div>
                                     </div>
+
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        <a href="<?php echo url('changePassword'); ?>">
+                                            <i class="fas fa-shield-alt">
+                                            </i> Change Password
+                                        </a>
+                                    </span>
                                 </div>
                             </div>
                         </div>

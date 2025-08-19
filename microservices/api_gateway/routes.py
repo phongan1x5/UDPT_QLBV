@@ -71,6 +71,11 @@ async def login(request: Request):
     data = await request.json()
     return await forward_request("POST", f"{MICROSERVICE_URLS['auth']}/login", data=data, require_auth=False)
 
+@router.post("/auth/changePassword")
+async def changePassword(request: Request):
+    data = await request.json()
+    return await forward_request("POST", f"{MICROSERVICE_URLS['auth']}/changePassword", data=data)
+
 @router.get("/auth/validate-token")
 async def validate_token(token: str):
     return await forward_request("GET", f"{MICROSERVICE_URLS['auth']}/validate-token?token={token}", require_auth=False)

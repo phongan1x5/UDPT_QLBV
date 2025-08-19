@@ -10,6 +10,12 @@ class UserLogin(BaseModel):
     id: str
     password: str
 
+class UserChangePassword(BaseModel):
+    id: str
+    password: str
+    newPassword: str
+    
+
 class UserResponse(BaseModel):
     id: str
     role: UserRole
