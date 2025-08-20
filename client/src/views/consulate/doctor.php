@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 
+echo '<pre>';
+print_r($currentLabServices);
+echo '</pre>';
+
 // Determine if any lab services are still pending
 $hasPendingLabServices = false;
 foreach ($currentLabServices as $service) {
@@ -145,6 +149,7 @@ foreach ($currentLabServices as $service) {
 												<span class="badge bg-info me-2">$<?php echo number_format($service['Service']['DonGia'], 2); ?></span>
 												<small class="text-muted">Requested: <?php echo date('M j, Y H:i', strtotime($service['ThoiGian'])); ?></small>
 											</div>
+											<h5 class="mb-1 text-muted small">Result: <?php echo htmlspecialchars($service['KetQua']); ?></h5>
 										</div>
 										<div class="col-md-4 text-end">
 											<?php if ($service['TrangThai'] === "ChoThuTien"): ?>
@@ -158,14 +163,14 @@ foreach ($currentLabServices as $service) {
 												<span class="badge bg-warning">Pending</span>
 											<?php else: ?>
 												<span class="badge bg-success">Completed</span>
-												<?php if (!empty($service['FileKetQua'])): ?>
-													<br>
-													<small>
-														<a href="<?php echo $service['FileKetQua']; ?>" target="_blank" class="text-decoration-none">
-															<i class="fas fa-file-alt"></i> View Results
+												  <?php if (!empty($service['FileKetQua'])): ?>
+		
+														<a href="<?php echo url('lab/used-services/results/' . basename($service['FileKetQua'])); ?>" target="_blank" class="btn btn-outline-info btn-sm">
+														📄 View PDF
 														</a>
-													</small>
-												<?php endif; ?>
+													<?php else: ?>
+														<span class="text-muted">No file</span>
+													<?php endif; ?>
 											<?php endif; ?>
 										</div>
 									</div>
