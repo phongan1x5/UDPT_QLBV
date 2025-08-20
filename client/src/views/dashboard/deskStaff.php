@@ -2,9 +2,9 @@
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 // Debug - you can remove this later
-echo '<pre>';
-print_r($user);
-echo '</pre>';
+// echo '<pre>';
+// print_r($user);
+// echo '</pre>';
 ?>
 
 <div class="container-fluid">

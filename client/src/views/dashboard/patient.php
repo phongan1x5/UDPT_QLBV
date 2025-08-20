@@ -3,9 +3,9 @@ require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 
 // Debug - you can remove this later
-echo '<pre>';
-print_r($user['token']);
-echo '</pre>';
+// echo '<pre>';
+// print_r($user['token']);
+// echo '</pre>';
 ?>
 
 <div class="row">

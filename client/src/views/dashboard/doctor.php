@@ -2,9 +2,9 @@
 require_once __DIR__ . '/../../helper/url_parsing.php';
 ob_start();
 // Debug - you can remove this later
-echo '<pre>';
-print_r($user);
-echo '</pre>';
+// echo '<pre>';
+// print_r($user);
+// echo '</pre>';
 // Extract doctor data from the wrapped response
 $doctorData = null;
 if ($doctor && $doctor['status'] === 200 && isset($doctor['data'][0])) {
