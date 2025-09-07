@@ -15,7 +15,7 @@ EMAIL_CONFIG = {
     'smtp_server': 'smtp.gmail.com',
     'smtp_port':  587,
     'username': "hospitalnotificationudpt@gmail.com",  # Replace with your test Gmail
-    'password': "luai udty rmga lfun",  # Replace with your App Password
+    'password': "luai udty rmga lfef",  # Replace with your App Password
     'use_tls': True,  # Gmail requires TLS
     'from_name': 'Hospital Notification System'  # Friendly sender name
 }
